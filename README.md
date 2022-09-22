@@ -1,0 +1,2 @@
+# freqdash
+Freqtrade database dashboard
