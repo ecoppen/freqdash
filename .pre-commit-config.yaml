@@ -33,6 +33,8 @@ repos:
   rev: v0.961
   hooks:
     - id: mypy
+      additional_dependencies:
+        - 'sqlalchemy[mypy]'
 
 
 - repo: https://github.com/PyCQA/flake8
