@@ -48,14 +48,14 @@ def dispatch_request(http_method, key=None):
     }.get(http_method, "GET")
 
 
-def send_public_request(api_url, url_path, payload=None):
+def send_public_request(api_url: str, url_path: str, payload=None):
     if payload is None:
         payload = {}
     query_string = urlencode(payload, True)
     url = api_url + url_path
     if query_string:
         url = url + "?" + query_string
-    # print("{}".format(url))
+    log.info(f"Requesting: {url}")
     response = dispatch_request("GET")(url=url)
     headers = response.headers
     json_response = response.json()
@@ -78,3 +78,13 @@ class Exchanges(str, Enum):
 class Markets(str, Enum):
     FUTURES = "futures"
     SPOT = "spot"
+
+
+class Intervals(str, Enum):
+    ONE_MINUTE = "1m"
+    FIVE_MINUTES = "5m"
+    FIFTEEN_MINUTES = "15m"
+    ONE_HOUR = "1H"
+    FOUR_HOURS = "4H"
+    ONE_DAY = "1D"
+    ONE_WEEK = "1W"
