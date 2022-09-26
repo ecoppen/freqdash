@@ -56,17 +56,21 @@ def page(request: Request, page_name: str):
 def get_prices(
     exchange: Exchanges,
     market: Markets,
-    base: Union[str, None] = None,
-    stake: Union[str, None] = None,
 ):
-    return exchanges["binance"].get_spot_prices()
+    if market is Markets.SPOT:
+        return exchanges[exchange].get_spot_prices()
+    else:
+        return {"error": "not implemented yet"}
 
 
-@app.get("/getprice/{exchange}/{market}/{base}/{stake}")
+@app.get("/getprice/{exchange}/{market}/{base}/{quote}")
 def get_price(
     exchange: Exchanges,
     market: Markets,
-    base: Union[str, None] = None,
-    stake: Union[str, None] = None,
+    base: str,
+    quote: str,
 ):
-    return exchanges["binance"].get_spot_prices()
+    if market is Markets.SPOT:
+        return exchanges[exchange].get_spot_price(base=base, quote=quote)
+    else:
+        return {"error": "not implemented yet"}
