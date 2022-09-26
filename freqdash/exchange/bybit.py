@@ -18,15 +18,9 @@ class Bybit(Exchange):
     futures_api_url = "https://api.bybit.com"
     max_weight = 120
 
-    def get_spot_price(
-        self, base: Union[str, None] = None, quote: Union[str, None] = None
-    ) -> Decimal:
+    def get_spot_price(self, base: str, quote: str) -> Decimal:
         self.check_weight()
-        params = {}
-        if base is not None and quote is not None:
-            params["symbol"] = f"{base}{quote}"
-        else:
-            return Decimal(-1.0)
+        params = {"symbol": f"{base}{quote}"}
         header, raw_json = send_public_request(
             api_url=self.spot_api_url,
             url_path="/spot/v3/public/quote/ticker/price",
