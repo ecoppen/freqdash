@@ -1,4 +1,5 @@
 import logging
+from decimal import Decimal
 
 from freqdash.exchange.exchange import Exchange
 from freqdash.exchange.utils import send_public_request
@@ -15,26 +16,24 @@ class Gateio(Exchange):
     futures_api_url = "https://fx-api.gateio.ws"
     max_weight = 1000
 
-    def get_spot_prices(self):
+    def get_spot_price(self, base: str, quote: str) -> Decimal:
         self.check_weight()
+        params = {"currency_pair": f"{base}_{quote}"}
         header, raw_json = send_public_request(
-            self.spot_api_url, "/api/v4/spot/tickers'"
+            api_url=self.spot_api_url, url_path="/api/v4/spot/tickers", payload=params
         )
-        self.update_weight(int(header["X-MBX-USED-WEIGHT-1M"]))
-        return raw_json
+        if len(raw_json) > 0:
+            if "last" in raw_json[0]:
+                return Decimal(raw_json[0]["last"])
+        return Decimal(-1.0)
 
-    def get_spot_kline(
-        self, symbol, interval="1d", start_time=None, end_time=None, limit=500
-    ):
+    def get_spot_prices(self) -> list[dict[str, Decimal]]:
         self.check_weight()
-        params = {"symbol": symbol, "interval": interval, "limit": limit}
-        if start_time is not None:
-            params["startTime"] = start_time
-        if end_time is not None:
-            params["endTime"] = end_time
-
+        params: dict = {}
         header, raw_json = send_public_request(
-            self.spot_api_url, "/api/v3/spot/candlesticks", payload=params
+            api_url=self.spot_api_url, url_path="/api/v4/spot/tickers", payload=params
         )
-        self.update_weight(int(header["X-MBX-USED-WEIGHT-1M"]))
-        return float(raw_json[0][4])
+        return [
+            {"symbol": pair["currency_pair"], "price": Decimal(pair["last"])}
+            for pair in raw_json
+        ]
