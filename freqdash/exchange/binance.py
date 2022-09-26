@@ -20,11 +20,7 @@ class Binance(Exchange):
 
     def get_spot_price(self, base: str, quote: str) -> Decimal:
         self.check_weight()
-        params = {}
-        if base is not None and quote is not None:
-            params["symbol"] = f"{base}{quote}"
-        else:
-            return Decimal(-1.0)
+        params = {"symbol": f"{base}{quote}"}
         header, raw_json = send_public_request(
             api_url=self.spot_api_url, url_path="/api/v3/ticker/price", payload=params
         )
