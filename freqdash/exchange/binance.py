@@ -31,7 +31,9 @@ class Binance(Exchange):
             api_url=self.spot_api_url, url_path="/api/v3/ticker/price", payload=params
         )
         self.update_weight(int(header["X-MBX-USED-WEIGHT-1M"]))
-        return Decimal(raw_json["price"])
+        if "price" in raw_json:
+            return Decimal(raw_json["price"])
+        return Decimal(-1.0)
 
     def get_spot_prices(self) -> list[dict[str, Decimal]]:
         self.check_weight()
