@@ -18,9 +18,7 @@ class Binance(Exchange):
     futures_api_url = "https://fapi.binance.com"
     max_weight = 1000
 
-    def get_spot_price(
-        self, base: Union[str, None] = None, quote: Union[str, None] = None
-    ) -> Decimal:
+    def get_spot_price(self, base: str, quote: str) -> Decimal:
         self.check_weight()
         params = {}
         if base is not None and quote is not None:
