@@ -36,10 +36,11 @@ class Exchange:
 
     def get_spot_kline(
         self,
-        symbol: str,
+        base: str,
+        quote: str,
         interval: Intervals = Intervals.ONE_DAY,
         start_time: Union[int, None] = None,
         end_time: Union[int, None] = None,
         limit: int = 500,
-    ) -> dict:
-        return {}
+    ) -> list:
+        return []
