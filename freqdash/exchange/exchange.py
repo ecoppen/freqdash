@@ -28,9 +28,7 @@ class Exchange:
     def update_weight(self, weight: int) -> None:
         self.weight = weight
 
-    def get_spot_price(
-        self, base: Union[str, None] = None, quote: Union[str, None] = None
-    ) -> Decimal:
+    def get_spot_price(self, base: str, quote: str) -> Decimal:
         return Decimal(-1.0)
 
     def get_spot_prices(self) -> list:
