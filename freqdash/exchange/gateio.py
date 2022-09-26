@@ -53,7 +53,7 @@ class Gateio(Exchange):
     ) -> list:
         self.check_weight()
         params = {
-            "currency_pair": {f"{base}_{quote}"},
+            "currency_pair": f"{base}_{quote}",
             "interval": interval,
             "limit": limit,
         }
