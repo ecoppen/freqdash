@@ -57,7 +57,7 @@ class Bybit(Exchange):
         limit: int = 500,
     ) -> list:
         self.check_weight()
-        params = {"symbol": {f"{base}{quote}"}, "interval": interval, "limit": limit}
+        params = {"symbol": f"{base}{quote}", "interval": interval, "limit": limit}
         if start_time is not None:
             params["startTime"] = start_time
         if end_time is not None:
