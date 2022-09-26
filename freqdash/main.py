@@ -13,7 +13,7 @@ from freqdash.exchange.bybit import Bybit
 from freqdash.exchange.gateio import Gateio
 from freqdash.exchange.kucoin import Kucoin
 from freqdash.exchange.okx import Okx
-from freqdash.exchange.utils import Exchanges, Markets
+from freqdash.exchange.utils import Exchanges, Intervals, Markets
 
 logs_file = Path(Path().resolve(), "log.txt")
 logs_file.touch(exist_ok=True)
@@ -71,6 +71,32 @@ def get_price(
     quote: str,
 ):
     if market is Markets.SPOT:
-        return exchanges[exchange].get_spot_price(base=base, quote=quote)
+        return exchanges[exchange].get_spot_price(
+            base=base.upper(), quote=quote.upper()
+        )
+    else:
+        return {"error": "not implemented yet"}
+
+
+@app.get("/getkline/{exchange}/{market}/{base}/{quote}/")
+def get_kline(
+    exchange: Exchanges,
+    market: Markets,
+    base: str,
+    quote: str,
+    interval: Intervals = Intervals.ONE_DAY,
+    start_time: Union[int, None] = None,
+    end_time: Union[int, None] = None,
+    limit: int = 500,
+):
+    if market is Markets.SPOT:
+        return exchanges[exchange].get_spot_kline(
+            base=base.upper(),
+            quote=quote.upper(),
+            interval=interval,
+            start_time=start_time,
+            end_time=end_time,
+            limit=limit,
+        )
     else:
         return {"error": "not implemented yet"}
