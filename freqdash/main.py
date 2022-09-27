@@ -52,7 +52,7 @@ def page(request: Request, page_name: str):
     return templates.TemplateResponse("index.html", {"request": request, "data": data})
 
 
-@app.get("/getprices/{exchange}/{market}")
+@app.get("/getprices")
 def get_prices(
     exchange: Exchanges,
     market: Markets,
@@ -63,7 +63,7 @@ def get_prices(
         return {"error": "not implemented yet"}
 
 
-@app.get("/getprice/{exchange}/{market}/{base}/{quote}")
+@app.get("/getprice")
 def get_price(
     exchange: Exchanges,
     market: Markets,
@@ -78,7 +78,7 @@ def get_price(
         return {"error": "not implemented yet"}
 
 
-@app.get("/getkline/{exchange}/{market}/{base}/{quote}/")
+@app.get("/getkline")
 def get_kline(
     exchange: Exchanges,
     market: Markets,
