@@ -8,11 +8,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from freqdash.exchange.binance import Binance
-from freqdash.exchange.bybit import Bybit
-from freqdash.exchange.gateio import Gateio
-from freqdash.exchange.kucoin import Kucoin
-from freqdash.exchange.okx import Okx
+from freqdash.exchange.factory import load_exchanges
 from freqdash.exchange.utils import Exchanges, Intervals, Markets
 
 logs_file = Path(Path().resolve(), "log.txt")
@@ -31,13 +27,7 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-exchanges = {
-    "binance": Binance(),
-    "bybit": Bybit(),
-    "gateio": Gateio(),
-    "kucoin": Kucoin(),
-    "okx": Okx(),
-}
+exchanges = load_exchanges()
 
 
 @app.get("/", response_class=HTMLResponse)
