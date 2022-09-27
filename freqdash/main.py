@@ -36,12 +36,6 @@ def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request, "data": data})
 
 
-@app.get("/page/{page_name}", response_class=HTMLResponse)
-def page(request: Request, page_name: str):
-    data = {"page": page_name}
-    return templates.TemplateResponse("index.html", {"request": request, "data": data})
-
-
 @app.get("/getprices")
 def get_prices(
     exchange: Exchanges,
