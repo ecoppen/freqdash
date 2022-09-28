@@ -18,5 +18,6 @@ def load_databases():
             databases[f"{file.stem}-{secrets.token_hex()}"] = Database(path=file)
         else:
             databases[file.stem] = Database(path=file)
-
+    if len(databases) == 0:
+        log.error("No databases were found in the data directory")
     return databases
