@@ -76,8 +76,8 @@ class Exchanges(str, Enum):
 
 
 class Markets(str, Enum):
-    FUTURES = "futures"
-    SPOT = "spot"
+    FUTURES = "FUTURES"
+    SPOT = "SPOT"
 
 
 class Intervals(str, Enum):
