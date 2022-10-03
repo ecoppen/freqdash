@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Test {% endblock %}
+{% block title %}{% endblock %}
 
 {% block header %}
 {% endblock %}
@@ -19,30 +19,53 @@
         </button>
     </div>
 </div>
+{% for database in data["databases"] %}
+<h3>{{database}}</h3>
+<div class="pt-3 pb-2 mb-3 border-bottom">
+    <div class="container text-center">
+        <div class="row">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header">
+                        Open trades
+                    </div>
+                    <div class="accordion accordion-flush" id="accordionTrades">
+                        {% for trade in data["databases"][database]["open_trades"] %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="flush-heading{{trade[3]}}">
+                                <button class="accordion-button collapsed {% if trade[7] < 0 %}bg-danger bg-opacity-25{% endif %}"
+                                        type="button" data-bs-toggle="collapse"
+                                        data-bs-target="#flush-collapse-{{database}}-{{trade[3]}}" aria-expanded="false"
+                                        aria-controls="flush-collapse-{{database}}-{{trade[3]}}">
+                                    {{trade[3]}} {{trade[7]}}%
+                                </button>
+                            </h2>
+                            <div id="flush-collapse-{{database}}-{{trade[3]}}" class="accordion-collapse collapse"
+                                 aria-labelledby="flush-heading-{{database}}-{{trade[3]}}"
+                                 data-bs-parent="#accordionFlush-{{database}}-{{trade[3]}}">
+                                <div class="accordion-body">
+                                    <ul class="list-group list-group-flush">
+                                        <li class="list-group-item list-group-item-secondary">{{trade[1]}} {{trade[2]}}</li>
+                                        <li class="list-group-item list-group-item-secondary">{{trade[0]}}</li>
+                                        <li class="list-group-item list-group-item-secondary">{{trade[5]}} @ {{trade[4]}} ({{trade[6]}})</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+            </div>
+            <div class="col">
 
-<h2>Section title</h2>
-<div class="table-responsive">
-    <table class="table table-striped table-sm">
-        <thead>
-        <tr>
-            <th scope="col">#</th>
-            <th scope="col">Header</th>
-            <th scope="col">Header</th>
-            <th scope="col">Header</th>
-            <th scope="col">Header</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr>
-            <td>1,001</td>
-            <td>random</td>
-            <td>data</td>
-            <td>placeholder</td>
-            <td>text</td>
-        </tr>
-        </tbody>
-    </table>
+            </div>
+        </div>
+    </div>
+    {{data["databases"][database]}}}
 </div>
+{% endfor %}
 {% endblock %}
 
 {% block scripts %}
