@@ -1,5 +1,6 @@
 import logging
 import os
+from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import Union
@@ -61,6 +62,21 @@ def read_root(request: Request):
             open_rate = Decimal(trade[12])
             open_date = trade[22]
             amount = Decimal(trade[20])
+            open_date_timedelta = datetime.now() - open_date
+            if market == Markets.SPOT:
+                url = (
+                    exchanges[exchange]
+                    .get_spot_trade_url()
+                    .replace("BASE", base)
+                    .replace("QUOTE", quote)
+                )
+            else:
+                url = (
+                    exchanges[exchange]
+                    .get_futures_trade_url()
+                    .replace("BASE", base)
+                    .replace("QUOTE", quote)
+                )
 
             current_price = Decimal(
                 get_price(exchange=exchange, market=market, base=base, quote=quote)
@@ -70,14 +86,20 @@ def read_root(request: Request):
             )
             data["databases"][database]["open_trades"].append(
                 [
-                    open_date,
+                    [
+                        open_date.strftime("%Y-%m-%d %H:%M:%S"),
+                        open_date_timedelta.days,
+                        open_date_timedelta.seconds // 3600,
+                        (open_date_timedelta.seconds // 60) % 60,
+                    ],
                     exchange,
                     market,
                     f"{base}{quote}",
-                    f"{open_rate:.6f}",
-                    f"{amount:.6f}",
-                    f"{current_price:.6f}",
+                    f"{open_rate:.6f}".rstrip("0"),
+                    f"{amount:.6f}".rstrip("0"),
+                    f"{current_price:.6f}".rstrip("0"),
                     current_percentage,
+                    url,
                 ]
             )
             data["databases"][database]["profit"]["unrealised"] += (
