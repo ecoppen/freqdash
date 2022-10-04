@@ -28,3 +28,13 @@ class Database:
         table_object = self.get_table_object(table_name)
 
         return self.session.query(table_object).filter_by(is_open=1).all()
+
+    def get_closed_orders_for_trade(self, trade_id):
+        table_name = "orders"
+        table_object = self.get_table_object(table_name)
+
+        return (
+            self.session.query(table_object)
+            .filter_by(ft_trade_id=trade_id, status="closed")
+            .all()
+        )
