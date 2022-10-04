@@ -55,6 +55,7 @@ def read_root(request: Request):
             }
         trades = databases[database].get_open_trades()
         for trade in trades:
+            id = trade[0]
             exchange = trade[1]
             market = trade[38]
             base = trade[3]
@@ -78,29 +79,68 @@ def read_root(request: Request):
                     .replace("QUOTE", quote)
                 )
 
+            all_closed_orders = databases[database].get_closed_orders_for_trade(
+                trade_id=id
+            )
+            closed_orders = []
+            first_order_price = -1
+            counter = 1
+            for order in all_closed_orders:
+                order_id = order[5]
+                order_side = order[2]
+                order_price = order[10]
+                order_amount = order[13]
+                order_filled_date = order[19]
+                order_filled_timedelta = datetime.now() - order_filled_date
+                if first_order_price == -1:
+                    first_order_price = order_price
+                    difference = Decimal(0.0)
+                else:
+                    difference = Decimal(
+                        f"{(order_price - first_order_price) / first_order_price * 100:.2f}"
+                    )
+                closed_orders.append(
+                    {
+                        "counter": counter,
+                        "id": order_id,
+                        "side": order_side,
+                        "price": order_price,
+                        "difference": difference,
+                        "amount": order_amount,
+                        "open_timings": [
+                            order_filled_date.strftime("%Y-%m-%d %H:%M:%S"),
+                            order_filled_timedelta.days,
+                            order_filled_timedelta.seconds // 3600,
+                            (order_filled_timedelta.seconds // 60) % 60,
+                        ],
+                    }
+                )
+                counter += 1
+
             current_price = Decimal(
                 get_price(exchange=exchange, market=market, base=base, quote=quote)
             )
             current_percentage = Decimal(
-                f"{(current_price-open_rate)/open_rate*100:.2f}"
+                f"{(current_price - open_rate) / open_rate * 100:.2f}"
             )
             data["databases"][database]["open_trades"].append(
-                [
-                    [
+                {
+                    "open_timings": [
                         open_date.strftime("%Y-%m-%d %H:%M:%S"),
                         open_date_timedelta.days,
                         open_date_timedelta.seconds // 3600,
                         (open_date_timedelta.seconds // 60) % 60,
                     ],
-                    exchange,
-                    market,
-                    f"{base}{quote}",
-                    f"{open_rate:.6f}".rstrip("0"),
-                    f"{amount:.6f}".rstrip("0"),
-                    f"{current_price:.6f}".rstrip("0"),
-                    current_percentage,
-                    url,
-                ]
+                    "exchange": exchange,
+                    "market": market,
+                    "symbol": f"{base}{quote}",
+                    "open_rate": f"{open_rate:.6f}".rstrip("0"),
+                    "amount": f"{amount:.6f}".rstrip("0"),
+                    "current_price": f"{current_price:.6f}".rstrip("0"),
+                    "current_percentage": current_percentage,
+                    "url": url,
+                    "orders": closed_orders,
+                }
             )
             data["databases"][database]["profit"]["unrealised"] += (
                 current_price * amount
