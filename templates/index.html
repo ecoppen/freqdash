@@ -32,32 +32,52 @@
                     <div class="accordion accordion-flush" id="accordionTrades">
                         {% for trade in data["databases"][database]["open_trades"] %}
                         <div class="accordion-item">
-                            <h2 class="accordion-header" id="flush-heading{{trade[3]}}">
-                                <button class="accordion-button p-2 collapsed {% if trade[7] < 0 %}bg-danger bg-opacity-25{% endif %}"
+                            <h2 class="accordion-header" id="flush-heading{{trade['symbol']}}">
+                                <button class="accordion-button p-2 collapsed {% if trade['current_percentage'] < 0 %}bg-danger bg-opacity-25{% endif %}"
                                         type="button" data-bs-toggle="collapse" style="color: inherit;"
-                                        data-bs-target="#flush-collapse-{{database}}-{{trade[3]}}" aria-expanded="false"
-                                        aria-controls="flush-collapse-{{database}}-{{trade[3]}}">
-                                    {{trade[3]}} {{trade[7]}}%
+                                        data-bs-target="#flush-collapse-{{database}}-{{trade['symbol']}}"
+                                        aria-expanded="false"
+                                        aria-controls="flush-collapse-{{database}}-{{trade['symbol']}}">
+                                    {{trade['symbol']}} {{trade['current_percentage']}}%
                                 </button>
                             </h2>
-                            <div id="flush-collapse-{{database}}-{{trade[3]}}" class="accordion-collapse collapse"
-                                 aria-labelledby="flush-heading-{{database}}-{{trade[3]}}"
-                                 data-bs-parent="#accordionFlush-{{database}}-{{trade[3]}}">
+                            <div id="flush-collapse-{{database}}-{{trade['symbol']}}"
+                                 class="accordion-collapse collapse"
+                                 aria-labelledby="flush-heading-{{database}}-{{trade['symbol']}}"
+                                 data-bs-parent="#accordionFlush-{{database}}-{{trade['symbol']}}">
                                 <ul class="list-group list-group-flush">
                                     <li class="list-group-item list-group-item-secondary d-flex justify-content-around">
-                                        <a href="{{trade[8]}}" style="text-decoration: none;" target="_blank">
-                                            <span class="badge bg-secondary position-relative me-3">{{trade[1]}}
+                                        <a href="{{trade['url']}}" style="text-decoration: none;" target="_blank">
+                                            <span class="badge bg-secondary position-relative me-3">{{trade['exchange']}}
                                                 <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary">
-                                                {{trade[2]}}
-                                                <span class="visually-hidden">Market type</span>
-                                              </span>
+                                                    {{trade['market']}}
+                                                    <span class="visually-hidden">Market type</span>
+                                                  </span>
                                             </span>
                                         </a>
-                                        <span class="badge text-bg-info" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="{{trade[0][0]}}">{{trade[0][1]}}d {{trade[0][2]}}h {{trade[0][3]}}m</span>
+                                        <span class="badge text-bg-info" data-bs-toggle="tooltip"
+                                              data-bs-placement="top" data-bs-title="{{trade['open_timings'][0]}}">{{trade['open_timings'][1]}}d {{trade['open_timings'][2]}}h {{trade['open_timings'][3]}}m</span>
                                     </li>
-                                    <li class="list-group-item list-group-item-secondary">{{trade[5]}} @ {{trade[4]}}
-                                        ({{trade[6]}})
+                                    <li class="list-group-item list-group-item-secondary">{{trade['amount']}} @
+                                        {{trade['open_rate']}}
+                                        ({{trade['current_price']}})
                                     </li>
+                                    {% for order in trade["orders"] %}
+                                    <li class="list-group-item list-group-item-secondary d-flex justify-content-around">
+                                            <span class="badge text-bg-info position-relative" data-bs-toggle="tooltip"
+                                                  data-bs-placement="top" data-bs-title="{{order['open_timings'][0]}}">
+                                                {{order['open_timings'][1]}}d {{order['open_timings'][2]}}h {{order['open_timings'][3]}}m
+                                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                                        {{order['side']}}
+                                                        <span class="visually-hidden">Side</span>
+                                                      </span>
+                                            </span>
+                                        {{order['amount']}}@{{order['price']}}
+                                        {% if order['difference'] != "-" %}
+                                        ({{order['difference']}}%)
+                                        {% endif %}
+                                    </li>
+                                    {% endfor %}
                                 </ul>
                             </div>
                         </div>
