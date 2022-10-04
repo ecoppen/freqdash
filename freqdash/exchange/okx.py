@@ -15,7 +15,9 @@ class Okx(Exchange):
 
     exchange = "okx"
     spot_api_url = "https://www.okx.com"
+    spot_trade_url = "https://www.okx.com/trade-spot/base-quote"
     futures_api_url = "https://www.okx.com"
+    futures_trade_url = "https://www.okx.com/trade-futures/base-quote"
     max_weight = 600
 
     def get_spot_price(self, base: str, quote: str) -> Decimal:
