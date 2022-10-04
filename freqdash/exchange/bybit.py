@@ -15,7 +15,9 @@ class Bybit(Exchange):
 
     exchange = "bybit"
     spot_api_url = "https://api.bybit.com"
+    spot_trade_url = "https://www.bybit.com/en-US/trade/spot/BASE/QUOTE"
     futures_api_url = "https://api.bybit.com"
+    futures_trade_url = "https://www.bybit.com/trade/usdt/BASEQUOTE"
     max_weight = 120
 
     def get_spot_price(self, base: str, quote: str) -> Decimal:
