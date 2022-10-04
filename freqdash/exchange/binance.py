@@ -15,7 +15,9 @@ class Binance(Exchange):
 
     exchange = "binance"
     spot_api_url = "https://api.binance.com"
+    spot_trade_url = "https://www.binance.com/en/trade/BASE_QUOTE"
     futures_api_url = "https://fapi.binance.com"
+    futures_trade_url = "https://www.binance.com/en/futures/BASEQUOTE"
     max_weight = 1000
 
     def get_spot_price(self, base: str, quote: str) -> Decimal:
