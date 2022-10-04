@@ -14,7 +14,9 @@ class Exchange:
 
     exchange: Union[str, None] = None
     spot_api_url: Union[str, None] = None
+    spot_trade_url: Union[str, None] = None
     futures_api_url: Union[str, None] = None
+    futures_trade_url: Union[str, None] = None
     weight: int = 0
     max_weight: int = 100
 
@@ -44,3 +46,9 @@ class Exchange:
         limit: int = 500,
     ) -> list:
         return []
+
+    def get_spot_trade_url(self):
+        return self.spot_trade_url
+
+    def get_futures_trade_url(self):
+        return self.futures_trade_url
