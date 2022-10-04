@@ -15,7 +15,9 @@ class Gateio(Exchange):
 
     exchange = "gate.io"
     spot_api_url = "https://api.gateio.ws"
+    spot_trade_url = "https://www.gate.io/trade/BASE_QUOTE"
     futures_api_url = "https://fx-api.gateio.ws"
+    futures_trade_url = "https://www.gate.io/futures_trade/USDT/BASE_QUOTE"
     max_weight = 1000
 
     def get_spot_price(self, base: str, quote: str) -> Decimal:
