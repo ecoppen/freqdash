@@ -73,8 +73,8 @@
                                                       </span>
                                             </span>
                                         {{order['amount']}}@{{order['price']}}
-                                        {% if order['difference'] != "-" %}
-                                        ({{order['difference']}}%)
+                                        {% if order['counter'] != 1 %}
+                                            {{ order['difference'] }}%
                                         {% endif %}
                                     </li>
                                     {% endfor %}
