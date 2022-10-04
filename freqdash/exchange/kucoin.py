@@ -15,7 +15,9 @@ class Kucoin(Exchange):
 
     exchange = "kucoin"
     spot_api_url = "https://api.kucoin.com"
+    spot_trade_url = "https://www.kucoin.com/trade/BASE-QUOTE"
     futures_api_url = "https://api-futures.kucoin.com"
+    futures_trade_url = "https://www.kucoin.com/futures/trade/BASEQUOTE"
     max_weight = 600
 
     def get_spot_price(self, base: str, quote: str) -> Decimal:
