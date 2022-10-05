@@ -10,6 +10,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+from freqdash.core.utils import end_datetime_ago, start_datetime_ago
 from freqdash.exchange.factory import load_exchanges
 from freqdash.exchange.utils import Exchanges, Intervals, Markets
 from freqdash.models.factory import load_databases
@@ -44,10 +45,19 @@ def read_root(request: Request):
                 "open_trades": [],
                 "open_orders": [],
                 "profit": {
-                    "today": Decimal(0.0),
-                    "seven_days": Decimal(0.0),
-                    "thirty_days": Decimal(0.0),
-                    "realised": Decimal(0.0),
+                    "today": databases[database].get_closed_profit_between_dates(
+                        start_datetime=start_datetime_ago(days=0),
+                        end_datetime=end_datetime_ago(days=0),
+                    ),
+                    "seven_days": databases[database].get_closed_profit_between_dates(
+                        start_datetime=start_datetime_ago(days=7),
+                        end_datetime=end_datetime_ago(days=0),
+                    ),
+                    "thirty_days": databases[database].get_closed_profit_between_dates(
+                        start_datetime=start_datetime_ago(days=30),
+                        end_datetime=end_datetime_ago(days=0),
+                    ),
+                    "realised": databases[database].get_closed_profit(),
                     "unrealised": Decimal(0.0),
                 },
                 "realised_daily_profit": [],
@@ -145,7 +155,6 @@ def read_root(request: Request):
             data["databases"][database]["profit"]["unrealised"] += (
                 current_price * amount
             ) - (open_rate * amount)
-
     return templates.TemplateResponse("index.html", {"request": request, "data": data})
 
 
