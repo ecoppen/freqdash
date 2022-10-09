@@ -45,7 +45,11 @@ class Database:
     def get_closed_profit(self):
         table_name = "trades"
         table_object = self.get_table_object(table_name)
-        return self.session.query(func.sum(table_object.c.close_profit_abs)).scalar()
+        result = self.session.query(func.sum(table_object.c.close_profit_abs)).scalar()
+        if result is None:
+            return 0.0
+        else:
+            return result
 
     def get_closed_profit_between_dates(
         self, start_datetime: Optional[str], end_datetime: Optional[str]
@@ -58,8 +62,12 @@ class Database:
             filters.append(table_object.c.close_date >= start_datetime)
         if end_datetime is not None:
             filters.append(table_object.c.close_date <= end_datetime)
-        return (
+        result = (
             self.session.query(func.sum(table_object.c.close_profit_abs))
             .filter(*filters)
             .scalar()
         )
+        if result is None:
+            return 0.0
+        else:
+            return result
