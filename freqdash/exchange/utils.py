@@ -88,3 +88,9 @@ class Intervals(str, Enum):
     FOUR_HOURS = "4h"
     ONE_DAY = "1d"
     ONE_WEEK = "1w"
+
+
+class Settle(str, Enum):
+    BTC = "btc"
+    USD = "usd"
+    USDT = "usdt"
