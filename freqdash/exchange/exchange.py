@@ -47,6 +47,23 @@ class Exchange:
     ) -> list:
         return []
 
+    def get_futures_price(self, base: str, quote: str) -> Decimal:
+        return Decimal(-1.0)
+
+    def get_futures_prices(self) -> list:
+        return []
+
+    def get_futures_kline(
+        self,
+        base: str,
+        quote: str,
+        interval: Intervals = Intervals.ONE_DAY,
+        start_time: Union[int, None] = None,
+        end_time: Union[int, None] = None,
+        limit: int = 500,
+    ) -> list:
+        return []
+
     def get_spot_trade_url(self):
         return self.spot_trade_url
 
