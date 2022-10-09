@@ -165,6 +165,8 @@ def get_prices(
 ):
     if market == Markets.SPOT.value:
         return exchanges[exchange].get_spot_prices()
+    elif market == Markets.FUTURES.value:
+        return exchanges[exchange].get_futures_prices()
     else:
         return {"error": "not implemented yet"}
 
@@ -178,6 +180,10 @@ def get_price(
 ):
     if market == Markets.SPOT.value:
         return exchanges[exchange].get_spot_price(
+            base=base.upper(), quote=quote.upper()
+        )
+    elif market == Markets.FUTURES.value:
+        return exchanges[exchange].get_futures_price(
             base=base.upper(), quote=quote.upper()
         )
     else:
@@ -197,6 +203,15 @@ def get_kline(
 ):
     if market == Markets.SPOT.value:
         return exchanges[exchange].get_spot_kline(
+            base=base.upper(),
+            quote=quote.upper(),
+            interval=interval,
+            start_time=start_time,
+            end_time=end_time,
+            limit=limit,
+        )
+    if market == Markets.FUTURES.value:
+        return exchanges[exchange].get_futures_kline(
             base=base.upper(),
             quote=quote.upper(),
             interval=interval,
