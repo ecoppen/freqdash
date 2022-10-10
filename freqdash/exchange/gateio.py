@@ -22,7 +22,7 @@ class Gateio(Exchange):
 
     def get_spot_price(self, base: str, quote: str) -> Decimal:
         self.check_weight()
-        params = {"currency_pair": f"{base}_{quote}"}
+        params: dict = {"currency_pair": f"{base}_{quote}"}
         header, raw_json = send_public_request(
             api_url=self.spot_api_url, url_path="/api/v4/spot/tickers", payload=params
         )
@@ -54,7 +54,7 @@ class Gateio(Exchange):
         limit: int = 500,
     ) -> list:
         self.check_weight()
-        params = {
+        params: dict = {
             "currency_pair": f"{base}_{quote}",
             "interval": interval,
             "limit": limit,
@@ -92,7 +92,7 @@ class Gateio(Exchange):
         self.check_weight()
         params: dict = {}
         header, raw_json = send_public_request(
-            api_url=self.spot_api_url,
+            api_url=self.futures_api_url,
             url_path=f"/api/v4/futures/{settle}/contracts/{base}_{quote}",
             payload=params,
         )
@@ -108,7 +108,7 @@ class Gateio(Exchange):
         self.check_weight()
         params: dict = {}
         header, raw_json = send_public_request(
-            api_url=self.spot_api_url,
+            api_url=self.futures_api_url,
             url_path=f"/api/v4/futures/{settle}/contracts",
             payload=params,
         )
@@ -140,7 +140,7 @@ class Gateio(Exchange):
             params["to"] = end_time
 
         header, raw_json = send_public_request(
-            api_url=self.spot_api_url,
+            api_url=self.futures_api_url,
             url_path=f"/api/v4/futures/{settle}/candlesticks",
             payload=params,
         )
