@@ -127,3 +127,50 @@ class Kucoin(Exchange):
                     for pair in raw_json["data"]
                 ]
         return []
+
+    def get_futures_kline(
+        self,
+        base: str,
+        quote: str,
+        interval: Intervals = Intervals.ONE_DAY,
+        start_time: Union[int, None] = None,
+        end_time: Union[int, None] = None,
+        limit: int = 500,
+    ) -> list:
+        self.check_weight()
+        custom_intervals = {
+            "1m": 1,
+            "5m": 5,
+            "15m": 15,
+            "1h": 60,
+            "4h": 240,
+            "1d": 1440,
+            "1w": 10080,
+        }
+        params: dict = {
+            "symbol": f"{base}{quote}",
+            "granularity": custom_intervals[interval],
+        }
+        if start_time is not None:
+            params["from"] = start_time
+        if end_time is not None:
+            params["to"] = end_time
+
+        header, raw_json = send_public_request(
+            api_url=self.futures_api_url, url_path="/api/v1/kline/query", payload=params
+        )
+
+        if "data" in [*raw_json]:
+            if len(raw_json["data"]) > 0:
+                return [
+                    {
+                        "timestamp": int(candle[0]),
+                        "open": Decimal(candle[1]),
+                        "high": Decimal(candle[2]),
+                        "low": Decimal(candle[3]),
+                        "close": Decimal(candle[4]),
+                        "volume": Decimal(candle[5]),
+                    }
+                    for candle in raw_json["data"]
+                ][:limit]
+        return []
