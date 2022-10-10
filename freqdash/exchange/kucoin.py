@@ -95,3 +95,35 @@ class Kucoin(Exchange):
                     for candle in raw_json["data"]
                 ][:limit]
         return []
+
+    def get_futures_price(self, base: str, quote: str) -> Decimal:
+        self.check_weight()
+        params = {"symbol": f"{base}{quote}"}
+        header, raw_json = send_public_request(
+            api_url=self.futures_api_url,
+            url_path="/api/v1/ticker",
+            payload=params,
+        )
+        if "data" in [*raw_json]:
+            if "price" in [*raw_json["data"]]:
+                return Decimal(raw_json["data"]["price"])
+        return Decimal(-1.0)
+
+    def get_futures_prices(self) -> list:
+        self.check_weight()
+        params: dict = {}
+        header, raw_json = send_public_request(
+            api_url=self.futures_api_url,
+            url_path="/api/v1/contracts/active",
+            payload=params,
+        )
+        if "data" in [*raw_json]:
+            if len(raw_json["data"]) > 0:
+                return [
+                    {
+                        "symbol": pair["symbol"],
+                        "price": Decimal(pair["markPrice"]),
+                    }
+                    for pair in raw_json["data"]
+                ]
+        return []
