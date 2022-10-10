@@ -97,3 +97,37 @@ class Okx(Exchange):
                     for candle in raw_json["data"]
                 ]
         return []
+
+    def get_futures_price(self, base: str, quote: str) -> Decimal:
+        self.check_weight()
+        params = {"instId": f"{base}-{quote}"}
+
+        header, raw_json = send_public_request(
+            api_url=self.futures_api_url,
+            url_path="/api/v5/market/ticker",
+            payload=params,
+        )
+        if "data" in [*raw_json]:
+            if len(raw_json["data"]) > 0:
+                if "last" in [*raw_json["data"][0]]:
+                    return Decimal(raw_json["data"][0]["last"])
+        return Decimal(-1.0)
+
+    def get_futures_prices(self) -> list:
+        self.check_weight()
+        params = {"instType": "FUTURES"}
+        header, raw_json = send_public_request(
+            api_url=self.futures_api_url,
+            url_path="/api/v5/market/tickers",
+            payload=params,
+        )
+        if "data" in [*raw_json]:
+            if len(raw_json["data"]) > 0:
+                return [
+                    {
+                        "symbol": pair["instId"].replace("-", ""),
+                        "price": Decimal(pair["last"]),
+                    }
+                    for pair in raw_json["data"]
+                ]
+        return []
