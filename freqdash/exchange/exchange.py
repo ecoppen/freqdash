@@ -57,8 +57,8 @@ class Exchange:
         self,
         base: str,
         quote: str,
+        start_time: int,
         interval: Intervals = Intervals.ONE_DAY,
-        start_time: Union[int, None] = None,
         end_time: Union[int, None] = None,
         limit: int = 500,
     ) -> list:
