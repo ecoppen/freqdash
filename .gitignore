@@ -134,4 +134,4 @@ dmypy.json
 # Project specific
 config.json
 log.txt
-*.sqlite*
+*.db*
