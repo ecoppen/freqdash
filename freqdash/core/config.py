@@ -17,6 +17,7 @@ class FreqtradeAPI(BaseModel):
 class Config(BaseModel):
     freqtrade_instances: list[FreqtradeAPI]
     scrape_interval: int = 600
+    database_name: str = "freqdash"
 
     @validator("scrape_interval")
     def interval_amount(cls, v):
