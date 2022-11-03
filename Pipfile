@@ -7,7 +7,9 @@ name = "pypi"
 fastapi = "*"
 jinja2 = "*"
 psycopg2-binary = "*"
+pydantic = "*"
 requests = "*"
+sshtunnel = "*"
 sqlalchemy = "*"
 uvicorn = {extras = ["standard"], version = "*"}
 
