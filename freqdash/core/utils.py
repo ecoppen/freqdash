@@ -1,4 +1,88 @@
+import json
+import logging
 from datetime import datetime, timedelta
+from typing import Union
+from urllib.parse import urlencode
+
+import requests  # type: ignore
+
+log = logging.getLogger(__name__)
+
+
+class HTTPRequestError(Exception):
+    def __init__(self, url, code, msg=None):
+        self.url = url
+        self.code = code
+        self.msg = msg
+
+    def __str__(self) -> str:
+        return f"Request to {self.url!r} failed. Code: {self.code}; Message: {self.msg}"
+
+
+class BlankResponse:
+    def __init__(self):
+        self.content = ""
+
+
+def dispatch_request(http_method, key=None, auth=None):
+    session = requests.Session()
+    session.auth = auth
+    session.headers.update(
+        {
+            "Content-Type": "application/json;charset=utf-8",
+            "X-MBX-APIKEY": key,
+        }
+    )
+    return {
+        "GET": session.get,
+        "DELETE": session.delete,
+        "PUT": session.put,
+        "POST": session.post,
+    }.get(http_method, "GET")
+
+
+def send_public_request(
+    url: str,
+    method: str = "GET",
+    payload: Union[dict, None] = None,
+    data: Union[dict, None] = None,
+    auth: Union[tuple, None] = None,
+):
+    empty_response = BlankResponse().content
+    if payload is None:
+        payload = {}
+    if data is None:
+        data = {}
+    query_string = urlencode(payload, True)
+    if query_string:
+        url = url + "?" + query_string
+
+    log.info(f"Requesting {url}")
+
+    try:
+        if data:
+            response = dispatch_request(method)(
+                url=url, data=json.dumps(data), auth=auth, timeout=5
+            )
+        else:
+            response = dispatch_request(method)(url=url, auth=auth, timeout=5)
+        headers = response.headers
+        json_response = response.json()
+        if "code" in json_response and "msg" in json_response:
+            if len(json_response["msg"]) > 0:
+                raise HTTPRequestError(
+                    url=url, code=json_response["code"], msg=json_response["msg"]
+                )
+        return headers, json_response
+    except requests.exceptions.Timeout:
+        log.info("Request timed out")
+        return empty_response, empty_response
+    except requests.exceptions.TooManyRedirects:
+        log.info("Too many redirects")
+        return empty_response, empty_response
+    except requests.exceptions.RequestException as e:
+        log.info(f"Request exception: {e}")
+        return empty_response, empty_response
 
 
 def start_datetime_ago(days: int) -> str:
