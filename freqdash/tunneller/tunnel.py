@@ -12,6 +12,8 @@ class Tunnel:
         self.ssh_host = str(instance.ssh_host)
         self.ssh_port = instance.ssh_port
         self.ssh_address = f"{self.ssh_host}:{self.ssh_port}"
+        self.remote_host = str(instance.remote_host)
+        self.remote_port = instance.remote_port
         self.api_username = instance.api_username
         self.api_password = instance.api_password
         self.started = False
@@ -21,11 +23,9 @@ class Tunnel:
             (self.ssh_host, self.ssh_port),
             ssh_username=instance.ssh_username,
             ssh_password=instance.ssh_password,
-            remote_bind_address=(str(instance.remote_host), instance.remote_port),
+            remote_bind_address=(str(self.remote_host), self.remote_port),
         )
-        log.info(
-            f"Tunnel instance {instance.ssh_host}:{instance.ssh_port} initialised "
-        )
+        log.info(f"Tunnel instance {self.ssh_host}:{self.ssh_port} initialised ")
 
     def start(self):
         self.server.start()
