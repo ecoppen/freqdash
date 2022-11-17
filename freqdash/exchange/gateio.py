@@ -123,11 +123,11 @@ class Gateio(Exchange):
         self,
         base: str,
         quote: str,
-        interval: Intervals = Intervals.ONE_DAY,
         start_time: Union[int, None] = None,
         end_time: Union[int, None] = None,
+        interval: Intervals = Intervals.ONE_DAY,
         limit: int = 500,
-        settle: Settle = Settle.USDT,
+        settle: Union[Settle, None] = Settle.USDT,
     ) -> list:
         self.check_weight()
         params: dict = {
@@ -138,6 +138,10 @@ class Gateio(Exchange):
             params["from"] = start_time
         if end_time is not None:
             params["to"] = end_time
+
+        if settle is None:
+            log.warning("Settle must be set for gate.io")
+            return []
 
         header, raw_json = send_public_request(
             api_url=self.futures_api_url,
