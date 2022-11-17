@@ -3,7 +3,7 @@ from decimal import Decimal
 from typing import Union
 
 from freqdash.exchange.exchange import Exchange
-from freqdash.exchange.utils import Intervals, send_public_request
+from freqdash.exchange.utils import Intervals, Settle, send_public_request
 
 log = logging.getLogger(__name__)
 
@@ -130,4 +130,16 @@ class Okx(Exchange):
                     }
                     for pair in raw_json["data"]
                 ]
+        return []
+
+    def get_futures_kline(
+        self,
+        base: str,
+        quote: str,
+        start_time: int,
+        end_time: Union[int, None] = None,
+        interval: Intervals = Intervals.ONE_DAY,
+        limit: int = 500,
+        settle: Union[Settle, None] = None,
+    ) -> list:
         return []
