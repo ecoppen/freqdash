@@ -3,7 +3,7 @@ import time
 from decimal import Decimal
 from typing import Union
 
-from freqdash.exchange.utils import Intervals
+from freqdash.exchange.utils import Intervals, Settle
 
 log = logging.getLogger(__name__)
 
@@ -58,9 +58,10 @@ class Exchange:
         base: str,
         quote: str,
         start_time: int,
-        interval: Intervals = Intervals.ONE_DAY,
         end_time: Union[int, None] = None,
+        interval: Intervals = Intervals.ONE_DAY,
         limit: int = 500,
+        settle: Union[Settle, None] = None,
     ) -> list:
         return []
 
