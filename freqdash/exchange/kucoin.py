@@ -132,8 +132,8 @@ class Kucoin(Exchange):
         self,
         base: str,
         quote: str,
-        interval: Intervals = Intervals.ONE_DAY,
         start_time: Union[int, None] = None,
+        interval: Intervals = Intervals.ONE_DAY,
         end_time: Union[int, None] = None,
         limit: int = 500,
     ) -> list:
