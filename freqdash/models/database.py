@@ -73,11 +73,26 @@ class Database:
             .all()
         )
         if len(check) == 0:
-            log.info(f"Adding host to db: {data['host']}")
+            log.info(
+                f"Adding host/remote host to db. Host: {data['host']} Remote host: {data['remote_host']}"
+            )
             result = self.engine.execute(table_object.insert().values(data))
-            log.info(f"Host saved: {data['host']}")
+            log.info(
+                f"Host saved. Host: {data['host']} Remote host: {data['remote_host']}"
+            )
             return result
-
+        else:
+            log.info(
+                f"Updating host in db. Host: {data['host']} Remote host: {data['remote_host']}"
+            )
+            self.session.query(table_object).filter_by(
+                host=data["host"], remote_host=data["remote_host"]
+            ).update(data)
+            self.session.commit()
+            self.session.flush()
+            log.info(
+                f"Host updated. Host: {data['host']} Remote host: {data['remote_host']}"
+            )
         return check
 
     def get_open_trades(self):
