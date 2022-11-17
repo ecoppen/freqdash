@@ -3,7 +3,7 @@ from decimal import Decimal
 from typing import Union
 
 from freqdash.exchange.exchange import Exchange
-from freqdash.exchange.utils import Intervals, send_public_request
+from freqdash.exchange.utils import Intervals, Settle, send_public_request
 
 log = logging.getLogger(__name__)
 
@@ -116,10 +116,11 @@ class Binance(Exchange):
         self,
         base: str,
         quote: str,
-        interval: Intervals = Intervals.ONE_DAY,
         start_time: Union[int, None] = None,
         end_time: Union[int, None] = None,
+        interval: Intervals = Intervals.ONE_DAY,
         limit: int = 500,
+        settle: Union[Settle, None] = None,
     ) -> list:
         self.check_weight()
         params: dict = {
