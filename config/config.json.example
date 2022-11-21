@@ -1,0 +1,24 @@
+{
+  "local_freqtrade_instances": [
+    {
+      "local_host": "127.0.0.1",
+      "local_port": 8080,
+      "api_username": "",
+      "api_password": ""
+    }
+  ],
+  "remote_freqtrade_instances": [
+    {
+      "ssh_host": "",
+      "ssh_port": 22,
+      "ssh_username": "",
+      "ssh_password": "",
+      "remote_host": "127.0.0.1",
+      "remote_port": 8080,
+      "api_username": "",
+      "api_password": ""
+    }
+  ],
+  "scrape_interval": 600,
+  "database_name": "freqdash"
+}
