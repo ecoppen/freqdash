@@ -53,6 +53,59 @@ class Database:
                 db.DateTime, default=datetime.now, onupdate=datetime.now
             )
 
+        class Sysinfo(self.Base):  # type: ignore
+            __tablename__ = "sysinfo"
+
+            id = db.Column(db.Integer, primary_key=True)
+            host_id = db.Column(db.Integer)
+            cpu_pct = db.Column(db.Numeric)
+            ram_pct = db.Column(db.Numeric)
+            added = db.Column(db.DateTime, default=datetime.now)
+
+        class Trades(self.Base):  # type: ignore
+            __tablename__ = "trades"
+
+            host_id = db.Column(db.Integer, primary_key=True)
+            trade_id = db.Column(db.Integer, primary_key=True)
+            pair = db.Column(db.String)
+            is_open = db.Column(db.Boolean)
+            amount = db.Column(db.Numeric)
+            stake_amount = db.Column(db.Numeric)
+            enter_tag = db.Column(db.String)
+
+            fee_open_cost = db.Column(db.Numeric)
+            fee_open_currency = db.Column(db.String)
+            fee_close_cost = db.Column(db.Numeric)
+            fee_close_currency = db.Column(db.String)
+
+            open_timestamp = db.Column(db.Integer)
+            open_rate = db.Column(db.Numeric)
+            close_timestamp = db.Column(db.Integer)
+            close_rate = db.Column(db.Numeric)
+            exit_reason = db.Column(db.String)
+            stop_loss_abs = db.Column(db.Numeric)
+            leverage = db.Column(db.Numeric)
+            is_short = db.Column(db.Boolean)
+            trading_mode = db.Column(db.String)
+            funding_fees = db.Column(db.Numeric)
+
+        class Orders(self.Base):  # type: ignore
+            __tablename__ = "orders"
+
+            host_id = db.Column(db.Integer, primary_key=True)
+            order_id = db.Column(db.Integer, primary_key=True)
+            trade_id = db.Column(db.Integer, primary_key=True)
+
+            amount = db.Column(db.Numeric)
+            filled = db.Column(db.Numeric)
+            order_side = db.Column(db.String)
+            order_type = db.Column(db.String)
+            order_timestamp = db.Column(db.Integer)
+            filled_timestamp = db.Column(db.Integer)
+            is_entry = db.Column(db.Boolean)
+            status = db.Column(db.String)
+            average = db.Column(db.Numeric)
+
         self.Base.metadata.create_all(self.engine)  # type: ignore
         log.info("database tables loaded")
 
