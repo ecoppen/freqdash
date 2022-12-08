@@ -15,10 +15,11 @@ repos:
   hooks:
     - id: end-of-file-fixer
     - id: check-added-large-files
+      args:
+        - "--maxkb=1024"
     - id: pretty-format-json
       args:
         - "--autofix"
-        - "--maxkb=1024"
 
 - repo: https://github.com/ambv/black
   rev: 22.3.0
