@@ -107,9 +107,9 @@ class Database:
             order_type = db.Column(db.String)
             order_timestamp = db.Column(db.Integer)
             order_filled_timestamp = db.Column(db.Integer)
-            ft_is_entry = db.Column(db.Boolean)
+            ft_is_entry = db.Column(db.Boolean, nullable=True)
             status = db.Column(db.String)
-            average = db.Column(db.Numeric)
+            average = db.Column(db.Numeric, nullable=True)
 
         self.Base.metadata.create_all(self.engine)  # type: ignore
         log.info("database tables loaded")
@@ -118,9 +118,14 @@ class Database:
         self.Base.metadata.reflect(bind=self.engine)  # type: ignore
         return self.Base.metadata.tables[table_name]  # type: ignore
 
-    def get_all_hosts(self):
+    def get_all_hosts(self) -> dict:
         table_object = self.get_table_object(table_name="hosts")
-        return self.session.query(table_object).all()
+        result = self.session.query(table_object).all()
+        hosts = {}
+        if result is not None:
+            for host in result:
+                hosts[host[0]] = host[1:]
+        return hosts
 
     def check_then_add_or_update_host(self, data):
         table_object = self.get_table_object(table_name="hosts")
@@ -206,22 +211,30 @@ class Database:
 
     def add_sysinfo(self, data):
         table_object = self.get_table_object(table_name="sysinfo")
-
         log.info(
             f"Adding sysinfo. Host_id: {data['host_id']} CPU: {data['cpu_pct']} RAM: {data['ram_pct']}"
         )
         self.engine.execute(table_object.insert().values(data))
 
-    def get_last_trade_id(self, host_id: int):
+    def get_oldest_open_trade_id(self, host_id: int):
         table_object = self.get_table_object(table_name="trades")
         result = (
             self.session.query(table_object)
-            .filter_by(host_id=host_id)
-            .order_by(table_object.c.trade_id.desc())
+            .filter_by(host_id=host_id, is_open=True)
+            .order_by(table_object.c.trade_id.asc())
             .first()
         )
         if result is None:
-            return 0
+            result = (
+                self.session.query(table_object)
+                .filter_by(host_id=host_id)
+                .order_by(table_object.c.trade_id.asc())
+                .first()
+            )
+            if result is None:
+                return 0
+            else:
+                return result[1]
         else:
             return result[1]
 
@@ -235,21 +248,27 @@ class Database:
                 .filter_by(host_id=host_id, trade_id=trade["trade_id"])
                 .first()
             )
+            adjusted_trade = {}
+            for key in table_keys:
+                adjusted_trade[key] = trade[key]
             if check is None:
-                adjusted_trade = {}
-                for key in table_keys:
-                    adjusted_trade[key] = trade[key]
                 log.info(
                     f"Adding trade to db. Host: {host_id} Trade: {trade['trade_id']} - {trade['pair']}"
                 )
                 self.engine.execute(table_object.insert().values(adjusted_trade))
-                self.check_then_add_orders(
-                    data=trade["orders"], host_id=host_id, trade_id=trade["trade_id"]
-                )
             else:
-                log.info(f"Trade {data['trade_id']} already in DB")
+                log.info(f"Trade {trade['trade_id']} already in DB, updating")
+                self.session.query(table_object).filter_by(
+                    host_id=host_id, trade_id=trade["trade_id"]
+                ).update(adjusted_trade)
+                self.session.commit()
+                self.session.flush()
 
-    def check_then_add_orders(self, data: dict, host_id: int, trade_id: int):
+            self.check_then_update_or_add_orders(
+                data=trade["orders"], host_id=host_id, trade_id=trade["trade_id"]
+            )
+
+    def check_then_update_or_add_orders(self, data: dict, host_id: int, trade_id: int):
         table_object = self.get_table_object(table_name="orders")
         table_keys = table_object.columns.keys()
         for order in data:
@@ -261,13 +280,20 @@ class Database:
                 )
                 .first()
             )
-            if check is None:
-                adjusted_order = {}
-                for key in table_keys:
+            adjusted_order = {}
+            for key in table_keys:
+                if key in order:
                     adjusted_order[key] = order[key]
+
+            if check is None:
                 log.info(
                     f"Adding order to db. Host: {host_id} Trade: {trade_id} Order:{order['order_id']}"
                 )
                 self.engine.execute(table_object.insert().values(adjusted_order))
             else:
-                log.info(f"Order {data['order_id']} already in DB")
+                log.info(f"Order {order['order_id']} already in DB, updating")
+                self.session.query(table_object).filter_by(
+                    host_id=host_id, trade_id=trade_id, order_id=order["order_id"]
+                ).update(adjusted_order)
+                self.session.commit()
+                self.session.flush()
