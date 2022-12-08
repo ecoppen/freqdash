@@ -10,14 +10,58 @@
         </ul>
 
         <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-uppercase">
-            <span>Databases</span>
+            <span>Live Instances</span>
         </h6>
         <ul class="nav flex-column mb-auto">
-            {% for database in data["databases"] %}
+            {% for key, value in data["instances"]["live"].items() %}
+            <li class="nav-item">
+                <a class="nav-link" href="instance/{{key}}" data-bs-toggle="tooltip" data-bs-title="{{ value['remote']}} {{value['local']}}">
+                    <span data-feather="file-text" class="align-text-bottom">
+                        {% if value["alert"] %}
+                        <i class="fa-solid fa-triangle-exclamation text-warning" data-bs-toggle="tooltip" data-bs-title="Last update > 10mins"></i>
+                        {% endif %}
+                        {% if value["status"] == "running" %}
+                            {% if value["trading_mode"] == "spot" %}
+                                <i class="fa-solid fa-circle text-success" data-bs-toggle="tooltip" data-bs-title="Spot - Running"></i>
+                            {% else %}
+                                <i class="fa-solid fa-diamond text-success" data-bs-toggle="tooltip" data-bs-title="Futures - Running"></i>
+                            {% endif %}
+                        {% elif value["status"] == "stopped" %}
+                            {% if value["trading_mode"] == "spot" %}
+                                <i class="fa-solid fa-circle text-danger" data-bs-toggle="tooltip" data-bs-title="Spot - Stopped"></i>
+                            {% else %}
+                                <i class="fa-solid fa-diamond text-danger" data-bs-toggle="tooltip" data-bs-title="Futures - Stopped"></i>
+                            {% endif %}
+                        {% endif %}
+                         {{value["strategy"]}} {{value["exchange"]}} {{value["stake"]}}
+                    </span>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-uppercase">
+            <span>Dry Instances</span>
+        </h6>
+        <ul class="nav flex-column mb-auto">
+            {% for key, value in data["instances"]["dry"].items() %}
             <li class="nav-item">
                 <a class="nav-link" href="#">
-                    <span data-feather="file-text" class="align-text-bottom"></span>
-                    <i class="fa-solid fa-database"></i> {{database}}
+                    <span data-feather="file-text" class="align-text-bottom">
+                        {% if value["status"] == "running" %}
+                            {% if value["trading_mode"] == "spot" %}
+                                <i class="fa-solid fa-circle text-success"></i>
+                            {% else %}
+                                <i class="fa-solid fa-diamond text-success"></i>
+                            {% endif %}
+                        {% elif value["status"] == "stopped" %}
+                            {% if value["trading_mode"] == "spot" %}
+                                <i class="fa-solid fa-circle text-danger"></i>
+                            {% else %}
+                                <i class="fa-solid fa-diamond text-danger"></i>
+                            {% endif %}
+                        {% endif %}
+                         {{value["strategy"]}} {{value["exchange"]}} {{value["stake"]}}
+                    </span>
                 </a>
             </li>
             {% endfor %}
