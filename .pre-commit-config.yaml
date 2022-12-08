@@ -18,6 +18,7 @@ repos:
     - id: pretty-format-json
       args:
         - "--autofix"
+        - "--maxmb=1"
 
 - repo: https://github.com/ambv/black
   rev: 22.3.0
