@@ -121,10 +121,24 @@ class Database:
     def get_all_hosts(self) -> dict:
         table_object = self.get_table_object(table_name="hosts")
         result = self.session.query(table_object).all()
-        hosts = {}
+        hosts: dict = {"live": {}, "dry": {}}
+        now = datetime.now()
         if result is not None:
             for host in result:
-                hosts[host[0]] = host[1:]
+                difference = now - host[12]
+                hosts[host[8]][host[0]] = {
+                    "remote": host[1],
+                    "local": host[2],
+                    "exchange": host[3],
+                    "strategy": host[4],
+                    "status": host[5],
+                    "stake": host[6],
+                    "trading_mode": host[7],
+                    "ft_version": host[9],
+                    "strategy_version": host[10],
+                    "last_checked": host[12],
+                    "alert": difference.total_seconds() > 600,
+                }
         return hosts
 
     def check_then_add_or_update_host(self, data):
