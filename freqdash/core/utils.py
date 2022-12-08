@@ -97,3 +97,17 @@ def end_datetime_ago(days: int) -> str:
         datetime.now() - timedelta(days=days), datetime.max.time()
     )
     return start_datetime.strftime("%Y-%m-%d %H:%M:%S")
+
+
+def start_milliseconds_ago(days: int) -> int:
+    start_datetime = datetime.combine(
+        datetime.now() - timedelta(days=days), datetime.min.time()
+    )
+    return int(start_datetime.timestamp() * 1000)
+
+
+def end_milliseconds_ago(days: int) -> int:
+    start_datetime = datetime.combine(
+        datetime.now() - timedelta(days=days), datetime.max.time()
+    )
+    return int(start_datetime.timestamp() * 1000)
