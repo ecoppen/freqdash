@@ -137,3 +137,4 @@ log.txt
 *.db*
 /ssh_keys/*
 !/ssh_keys/.gitkeep
+node_modules
