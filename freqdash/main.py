@@ -1,19 +1,29 @@
 import logging
 import os
+import threading
+import time
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import Union
 
-from fastapi import FastAPI, Request
+from fastapi import BackgroundTasks, FastAPI, Request
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from freqdash.core.utils import end_datetime_ago, start_datetime_ago
+from freqdash.connection.factory import load_tunnels
+from freqdash.core.config import load_config
+from freqdash.core.utils import (
+    end_datetime_ago,
+    send_public_request,
+    start_datetime_ago,
+)
 from freqdash.exchange.factory import load_exchanges
 from freqdash.exchange.utils import Exchanges, Intervals, Markets
-from freqdash.models.factory import load_databases
+from freqdash.models.database import Database
+from freqdash.scraper.scraper import Scraper
 
 logs_file = Path(Path().resolve(), "log.txt")
 logs_file.touch(exist_ok=True)
@@ -26,135 +36,31 @@ logging.basicConfig(
 )
 
 log = logging.getLogger(__name__)
+log.info("freqdash started")
+
+ssh_keys_folder = Path(Path().resolve(), "ssh_keys")
+config_file = Path(Path().resolve(), "config", "config.json")
+config = load_config(path=config_file)
+database_file = Path(Path().resolve(), f"{config.database_name}.db")
+database = Database(path=database_file)
+tunnels = load_tunnels(
+    config=config.remote_freqtrade_instances, ssh_keys_folder=ssh_keys_folder
+)
+scraper = Scraper(tunnels=tunnels, database=database)
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
+app.add_middleware(GZipMiddleware)
 templates = Jinja2Templates(directory="templates")
 
 exchanges = load_exchanges()
-databases = load_databases()
 
 
 @app.get("/", response_class=HTMLResponse)
 def read_root(request: Request):
-    data: dict = {"page": "index", "databases": {}}
+    data: dict = {"page": "index", "instances": {}}
 
-    for database in databases:
-        if database not in data["databases"]:
-            data["databases"][database] = {
-                "open_trades": [],
-                "open_orders": [],
-                "profit": {
-                    "today": databases[database].get_closed_profit_between_dates(
-                        start_datetime=start_datetime_ago(days=0),
-                        end_datetime=end_datetime_ago(days=0),
-                    ),
-                    "seven_days": databases[database].get_closed_profit_between_dates(
-                        start_datetime=start_datetime_ago(days=7),
-                        end_datetime=end_datetime_ago(days=0),
-                    ),
-                    "thirty_days": databases[database].get_closed_profit_between_dates(
-                        start_datetime=start_datetime_ago(days=30),
-                        end_datetime=end_datetime_ago(days=0),
-                    ),
-                    "realised": databases[database].get_closed_profit(),
-                    "unrealised": Decimal(0.0),
-                },
-                "realised_daily_profit": [],
-                "realised_symbol_profit": {},
-            }
-        trades = databases[database].get_open_trades()
-        for trade in trades:
-            id = trade[0]
-            exchange = trade[1]
-            market = trade[38]
-            base = trade[3]
-            quote = trade[4]
-            open_rate = Decimal(trade[12])
-            open_date = trade[22]
-            amount = Decimal(trade[20])
-            open_date_timedelta = datetime.now() - open_date
-            if market == Markets.SPOT:
-                url = (
-                    exchanges[exchange]
-                    .get_spot_trade_url()
-                    .replace("BASE", base)
-                    .replace("QUOTE", quote)
-                )
-            else:
-                url = (
-                    exchanges[exchange]
-                    .get_futures_trade_url()
-                    .replace("BASE", base)
-                    .replace("QUOTE", quote)
-                )
-
-            all_closed_orders = databases[database].get_closed_orders_for_trade(
-                trade_id=id
-            )
-            closed_orders = []
-            first_order_price = -1
-            counter = 1
-            for order in all_closed_orders:
-                order_id = order[5]
-                order_side = order[2]
-                order_price = order[10]
-                order_amount = order[13]
-                order_filled_date = order[19]
-                order_filled_timedelta = datetime.now() - order_filled_date
-                if first_order_price == -1:
-                    first_order_price = order_price
-                    difference = Decimal(0.0)
-                else:
-                    difference = Decimal(
-                        f"{(order_price - first_order_price) / first_order_price * 100:.2f}"
-                    )
-                closed_orders.append(
-                    {
-                        "counter": counter,
-                        "id": order_id,
-                        "side": order_side,
-                        "price": order_price,
-                        "difference": difference,
-                        "amount": order_amount,
-                        "open_timings": [
-                            order_filled_date.strftime("%Y-%m-%d %H:%M:%S"),
-                            order_filled_timedelta.days,
-                            order_filled_timedelta.seconds // 3600,
-                            (order_filled_timedelta.seconds // 60) % 60,
-                        ],
-                    }
-                )
-                counter += 1
-
-            current_price = Decimal(
-                get_price(exchange=exchange, market=market, base=base, quote=quote)
-            )
-            current_percentage = Decimal(
-                f"{(current_price - open_rate) / open_rate * 100:.2f}"
-            )
-            data["databases"][database]["open_trades"].append(
-                {
-                    "open_timings": [
-                        open_date.strftime("%Y-%m-%d %H:%M:%S"),
-                        open_date_timedelta.days,
-                        open_date_timedelta.seconds // 3600,
-                        (open_date_timedelta.seconds // 60) % 60,
-                    ],
-                    "exchange": exchange,
-                    "market": market,
-                    "symbol": f"{base}{quote}",
-                    "open_rate": f"{open_rate:.6f}".rstrip("0"),
-                    "amount": f"{amount:.6f}".rstrip("0"),
-                    "current_price": f"{current_price:.6f}".rstrip("0"),
-                    "current_percentage": current_percentage,
-                    "url": url,
-                    "orders": closed_orders,
-                }
-            )
-            data["databases"][database]["profit"]["unrealised"] += (
-                current_price * amount
-            ) - (open_rate * amount)
+    data["instances"] = database.get_all_hosts(index=True)
     return templates.TemplateResponse("index.html", {"request": request, "data": data})
 
 
@@ -221,3 +127,28 @@ def get_kline(
         )
     else:
         return {"error": "not implemented yet"}
+
+
+def _auto_scrape():
+    while True:
+        log.info("Auto scrape routines starting")
+        scraper.scrape()
+        all_hosts_and_modes = database.get_hosts_and_modes()
+        for exchange in all_hosts_and_modes:
+            for mode in all_hosts_and_modes[exchange]:
+                database.delete_then_update_price(
+                    exchange=exchange,
+                    market=mode,
+                    data=get_prices(exchange=exchange, market=mode),
+                )
+        log.info(
+            f"Auto scrape routines terminated. Sleeping {config.scrape_interval} seconds..."
+        )
+        time.sleep(config.scrape_interval)
+
+
+@app.on_event("startup")
+def auto_scrape():
+    thread = threading.Thread(target=_auto_scrape)
+    thread.daemon = True
+    thread.start()
