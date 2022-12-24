@@ -8,94 +8,208 @@
 {% block page_content %}
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h1 class="h2">Dashboard</h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
-        <div class="btn-group me-2">
-            <button type="button" class="btn btn-sm btn-outline-secondary">Share</button>
-            <button type="button" class="btn btn-sm btn-outline-secondary">Export</button>
-        </div>
-        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle">
-            <span data-feather="calendar" class="align-text-bottom"></span>
-            This week
-        </button>
-    </div>
 </div>
-{% for database in data["databases"] %}
-<h3>{{database}}</h3>
-<div class="pt-3 pb-2 mb-3 border-bottom">
-    <div class="container text-center">
-        <div class="row">
-            <div class="col">
-                <div class="card">
-                    <div class="card-header">
-                        Open trades
-                    </div>
-                    <div class="accordion accordion-flush" id="accordionTrades">
-                        {% for trade in data["databases"][database]["open_trades"] %}
-                        <div class="accordion-item">
-                            <h2 class="accordion-header" id="flush-heading{{trade['symbol']}}">
-                                <button class="accordion-button p-2 collapsed {% if trade['current_percentage'] < 0 %}bg-danger bg-opacity-25{% endif %}"
-                                        type="button" data-bs-toggle="collapse" style="color: inherit;"
-                                        data-bs-target="#flush-collapse-{{database}}-{{trade['symbol']}}"
-                                        aria-expanded="false"
-                                        aria-controls="flush-collapse-{{database}}-{{trade['symbol']}}">
-                                    {{trade['symbol']}} {{trade['current_percentage']}}%
-                                </button>
-                            </h2>
-                            <div id="flush-collapse-{{database}}-{{trade['symbol']}}"
-                                 class="accordion-collapse collapse"
-                                 aria-labelledby="flush-heading-{{database}}-{{trade['symbol']}}"
-                                 data-bs-parent="#accordionFlush-{{database}}-{{trade['symbol']}}">
-                                <ul class="list-group list-group-flush">
-                                    <li class="list-group-item list-group-item-secondary d-flex justify-content-around">
-                                        <a href="{{trade['url']}}" style="text-decoration: none;" target="_blank">
-                                            <span class="badge bg-secondary position-relative me-3">{{trade['exchange']}}
-                                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary">
-                                                    {{trade['market']}}
-                                                    <span class="visually-hidden">Market type</span>
-                                                  </span>
-                                            </span>
-                                        </a>
-                                        <span class="badge text-bg-info" data-bs-toggle="tooltip"
-                                              data-bs-placement="top" data-bs-title="{{trade['open_timings'][0]}}">{{trade['open_timings'][1]}}d {{trade['open_timings'][2]}}h {{trade['open_timings'][3]}}m</span>
-                                    </li>
-                                    <li class="list-group-item list-group-item-secondary">{{trade['amount']}} @
-                                        {{trade['open_rate']}}
-                                        ({{trade['current_price']}})
-                                    </li>
-                                    {% for order in trade["orders"] %}
-                                    <li class="list-group-item list-group-item-secondary d-flex justify-content-around">
-                                            <span class="badge text-bg-info position-relative" data-bs-toggle="tooltip"
-                                                  data-bs-placement="top" data-bs-title="{{order['open_timings'][0]}}">
-                                                {{order['open_timings'][1]}}d {{order['open_timings'][2]}}h {{order['open_timings'][3]}}m
-                                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                                        {{order['side']}}
-                                                        <span class="visually-hidden">Side</span>
-                                                      </span>
-                                            </span>
-                                        {{order['amount']}}@{{order['price']}}
-                                        {% if order['counter'] != 1 %}
-                                            {{ order['difference'] }}%
-                                        {% endif %}
-                                    </li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
+<div class="class='container-fluid'">
+    <div class="row">
+        <div class="col-lg-8">
+            {% if data["instances"]["live"]|length == 0 and data["instances"]["dry"]|length == 0 %}
+            <div class="alert alert-info" role="alert">
+              Add a FT instance to config.json to get started.
+            </div>
+            {% endif %}
+            {% if data["instances"]["live"]|length > 0 %}
+            <div class="card">
+                <div class="card-header">
+                    Live instances
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm table-bordered">
+                      <thead>
+                        <tr>
+                          <th scope="col">#</th>
+                          <th scope="col">Strategy</th>
+                          <th scope="col">Version</th>
+                          <th scope="col">Exchange</th>
+                          <th scope="col">FT</th>
+                          <th scope="col">Stake</th>
+                          <th scope="col">Mode</th>
+                          <th scope="col">Status</th>
+                          <th scope="col">Closed trades</th>
+                          <th scope="col">Closed profit</th>
+                          <th scope="col">Open trades</th>
+                          <th scope="col">Open profit</th>
+                          <th scope="col">Updated</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                      {% for key, value in data["instances"]["live"].items() %}
+                        <tr>
+                          <th scope="row">{{key}}</th>
+                          <td>{{value["strategy"]}}</td>
+                          <td>{{value["strategy_version"]}}</td>
+                          <td>{{value["exchange"]}}</td>
+                          <td>{{value["ft_version"]}}</td>
+                          <td>{{value["stake"]}}</td>
+                          <td>{{value["trading_mode"]}}</td>
+                          <td>{{value["status"]}}</td>
+                          <td>{{value["closed_trades"]}}</td>
+                            {% if value["closed_profit"] >= 0 %}
+                          <td class="table-success">
+                              {% else %}
+                            <td class="table-danger">
+                          {% endif %}
+                              {{value["closed_profit"]}}</td>
+                          <td>{{value["open_trades"]}}</td>
+                          {% if value["open_profit"] >= 0 %}
+                          <td class="table-success">
+                              {% else %}
+                            <td class="table-danger">
+                          {% endif %}
+                              {{value["open_profit"]}}</td>
+                          <td>{{value["last_checked"]}}</td>
+
+                        </td>
+                      {% endfor %}
+                      </tbody>
+                    </table>
                 </div>
             </div>
-            <div class="col">
+            {% endif %}
+
+            {% if data["instances"]["dry"]|length > 0 %}
+                {% if data["instances"]["dry"]|length > 0 %}
+                    <br>
+                {% endif %}
+            <div class="card">
+                <div class="card-header">
+                    Dry instances
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm table-bordered">
+                      <thead>
+                        <tr>
+                          <th scope="col">#</th>
+                          <th scope="col">Strategy</th>
+                          <th scope="col">Version</th>
+                          <th scope="col">Exchange</th>
+                          <th scope="col">FT</th>
+                          <th scope="col">Stake</th>
+                          <th scope="col">Mode</th>
+                          <th scope="col">Status</th>
+                          <th scope="col">Closed trades</th>
+                          <th scope="col">Closed profit</th>
+                          <th scope="col">Open trades</th>
+                          <th scope="col">Open profit</th>
+                          <th scope="col">Updated</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                      {% for key, value in data["instances"]["dry"].items() %}
+                        <tr>
+                          <th scope="row">{{key}}</th>
+                          <td>{{value["strategy"]}}</td>
+                          <td>{{value["strategy_version"]}}</td>
+                          <td>{{value["exchange"]}}</td>
+                          <td>{{value["ft_version"]}}</td>
+                          <td>{{value["stake"]}}</td>
+                          <td>{{value["trading_mode"]}}</td>
+                          <td>{{value["status"]}}</td>
+                          <td>{{value["closed_trades"]}}</td>
+                         {% if value["closed_profit"] >= 0 %}
+                          <td class="table-success">
+                              {% else %}
+                            <td class="table-danger">
+                          {% endif %}
+                              {{value["closed_profit"]}}</td>
+                          <td>{{value["open_trades"]}}</td>
+                          {% if value["open_profit"] >= 0 %}
+                          <td class="table-success">
+                              {% else %}
+                            <td class="table-danger">
+                          {% endif %}{{value["open_profit"]}}</td>
+                          <td>{{value["last_checked"]}}</td>
+
+                        </tr>
+                      {% endfor %}
+                      </tbody>
+                    </table>
+                </div>
             </div>
-            <div class="col">
+            {% endif %}
+        </div>
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    Open trades
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm table-bordered">
+                      <thead>
+                        <tr>
+                          <th scope="col">Instance</th>
+                          <th scope="col">Pair</th>
+                          <th scope="col">OR</th>
+                          <th scope="col">CR</th>
+                          <th scope="col">%</th>
+                          <th scope="col">Profit</th>
+                          <th scope="col">Open</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                      {% for trade in data["instances"]["open"] %}
+                        {% if trade[9] >= 0 %}
+                        <tr class="table-success">
+                            {% else %}
+                            <tr class="table-danger">
+                          {% endif %}
+                          <th scope="row">{{trade[0]}}</th>
+                          <td>{{trade[2]}}</td>
+                          <td>{{"%.3g"|format(trade[16])}}</td>
+                          <td>{{"%.3g"|format(trade[25])}}</td>
+                          <td>{{"%.2f"|format(trade[26])}}</td>
+                          <td>{{"%.2f"|format(trade[9])}}</td>
+                          <td>{{trade[15]}}</td>
+                        </tr>
+                      {% endfor %}
+                      </tbody>
+                    </table>
+                </div>
             </div>
-            <div class="col">
+            <br>
+            <div class="card">
+                <div class="card-header">
+                    Recent trades
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm table-bordered">
+                      <thead>
+                        <tr>
+                          <th scope="col">Instance</th>
+                          <th scope="col">Pair</th>
+                          <th scope="col">Profit</th>
+                          <th scope="col">Closed</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                      {% for trade in data["instances"]["recent"] %}
+                        {% if trade[9] >= 0 %}
+                        <tr class="table-success">
+                            {% else %}
+                            <tr class="table-danger">
+                          {% endif %}
+                          <th scope="row">{{trade[0]}}</th>
+                          <td>{{trade[2]}}</td>
+                          <td>{{"%.2f"|format(trade[9])}}</td>
+                          <td>{{trade[17]}}</td>
+                        </tr>
+                      {% endfor %}
+                      </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
-    {{data["databases"][database]}}}
 </div>
-{% endfor %}
 {% endblock %}
 
 {% block scripts %}
