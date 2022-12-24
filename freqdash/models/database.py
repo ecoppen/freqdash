@@ -62,6 +62,16 @@ class Database:
             ram_pct = db.Column(db.Numeric)
             added = db.Column(db.DateTime, default=datetime.now)
 
+        class Prices(self.Base):  # type: ignore
+            __tablename__ = "prices"
+
+            id = db.Column(db.Integer, primary_key=True)
+            exchange = db.Column(db.String)
+            trading_mode = db.Column(db.String)
+            symbol = db.Column(db.String)
+            price = db.Column(db.Numeric)
+            updated = db.Column(db.DateTime, default=datetime.now)
+
         class Trades(self.Base):  # type: ignore
             __tablename__ = "trades"
 
@@ -70,6 +80,7 @@ class Database:
             pair = db.Column(db.String)
             base_currency = db.Column(db.String)
             quote_currency = db.Column(db.String)
+            exchange = db.Column(db.String)
 
             is_open = db.Column(db.Boolean)
             amount = db.Column(db.Numeric)
@@ -118,10 +129,22 @@ class Database:
         self.Base.metadata.reflect(bind=self.engine)  # type: ignore
         return self.Base.metadata.tables[table_name]  # type: ignore
 
-    def get_all_hosts(self) -> dict:
+    def get_hosts_and_modes(self) -> dict:
         table_object = self.get_table_object(table_name="hosts")
         result = self.session.query(table_object).all()
-        hosts: dict = {"live": {}, "dry": {}}
+        hosts: dict = {}
+        if result is not None:
+            for host in result:
+                if host[3] not in hosts:
+                    hosts[host[3]] = []
+                if host[7] not in hosts[host[3]]:
+                    hosts[host[3]].append(host[7])
+        return hosts
+
+    def get_all_hosts(self, index: bool = False) -> dict:
+        table_object = self.get_table_object(table_name="hosts")
+        result = self.session.query(table_object).all()
+        hosts: dict = {"live": {}, "dry": {}, "recent": [], "open": []}
         now = datetime.now()
         if result is not None:
             for host in result:
@@ -133,12 +156,58 @@ class Database:
                     "strategy": host[4],
                     "status": host[5],
                     "stake": host[6],
-                    "trading_mode": host[7],
+                    "trading_mode": host[7].upper(),
                     "ft_version": host[9],
                     "strategy_version": host[10],
-                    "last_checked": host[12],
+                    "last_checked": host[12].strftime("%Y-%m-%d %H:%M:%S"),
                     "alert": difference.total_seconds() > 600,
                 }
+                if index:
+                    hosts[host[8]][host[0]]["closed_trades"] = self.get_trades_count(
+                        host_id=host[0], is_open=False
+                    )
+                    hosts[host[8]][host[0]]["closed_profit"] = self.get_trade_profit(
+                        host_id=host[0], is_open=False, quote_currency=host[6]
+                    )
+                    hosts[host[8]][host[0]]["open_trades"] = self.get_trades_count(
+                        host_id=host[0], is_open=True
+                    )
+                    hosts[host[8]][host[0]]["open_profit"] = self.get_trade_profit(
+                        host_id=host[0], is_open=True, quote_currency=host[6]
+                    )
+                    closed_trades = self.get_trades(
+                        host_id=host[0], is_open=False, limit=10, sort=True
+                    )
+                    hosts["recent"] += [list(trade) for trade in closed_trades]
+                    open_trades = self.get_trades(
+                        host_id=host[0], is_open=True, sort=True
+                    )
+                    hosts["open"] += [list(trade) for trade in open_trades]
+
+            hosts["recent"].sort(key=lambda x: x[16], reverse=True)
+            hosts["recent"] = hosts["recent"][:10]
+            for trade in hosts["recent"]:
+                trade[17] = datetime.utcfromtimestamp(trade[17] / 1000.0).strftime(
+                    "%Y-%m-%d %H:%M:%S"
+                )
+            hosts["open"].sort(key=lambda x: x[15])
+            for trade in hosts["open"]:
+                trade[15] = datetime.utcfromtimestamp(trade[15] / 1000.0).strftime(
+                    "%Y-%m-%d %H:%M:%S"
+                )
+                current_price = self.get_current_price(
+                    symbol=f"{trade[3]}{trade[4]}",
+                    exchange=trade[5],
+                    trading_mode=trade[23],
+                )
+                if current_price is not None:
+                    trade += [
+                        current_price[4],
+                        (current_price[4] - trade[16]) / trade[16] * 100,
+                    ]
+                else:
+                    trade += [None, None]
+
         return hosts
 
     def check_then_add_or_update_host(self, data):
@@ -181,10 +250,101 @@ class Database:
             )
         return check[0]
 
-    def get_open_trades(self):
-        table_object = self.get_table_object(table_name="trades")
+    def get_current_price(self, exchange: str, symbol: str, trading_mode: str):
+        table_object = self.get_table_object(table_name="prices")
+        price = (
+            self.session.query(table_object)
+            .filter_by(exchange=exchange, trading_mode=trading_mode, symbol=symbol)
+            .first()
+        )
+        return price
 
-        return self.session.query(table_object).filter_by(is_open=1).all()
+    def delete_then_update_price(self, exchange: str, market: str, data: dict):
+        table_object = self.get_table_object(table_name="prices")
+        check = (
+            self.session.query(table_object)
+            .filter_by(exchange=exchange, trading_mode=market)
+            .all()
+        )
+
+        if check is not None:
+            if len(check) > 0:
+                log.info(f"Price data found for {exchange}/{market} deleting")
+                self.session.query(table_object).filter_by(
+                    exchange=exchange, trading_mode=market
+                ).delete()
+                self.session.commit()
+                self.session.flush()
+        for item in data:
+            item["exchange"] = exchange
+            item["trading_mode"] = market
+        self.engine.execute(table_object.insert().values(data))
+        log.info(f"Price data saved for {exchange}/{market}")
+
+    def get_trades(
+        self,
+        host_id: int,
+        is_open: bool = True,
+        limit: int | None = None,
+        sort: bool = False,
+    ):
+        table_object = self.get_table_object(table_name="trades")
+        int_is_open: int = 1 if is_open else 0
+        if sort:
+            if is_open:
+                trades = (
+                    self.session.query(table_object)
+                    .filter_by(host_id=host_id, is_open=int_is_open)
+                    .order_by(table_object.c.open_timestamp.asc())
+                    .all()
+                )
+            else:
+                trades = (
+                    self.session.query(table_object)
+                    .filter_by(host_id=host_id, is_open=int_is_open)
+                    .order_by(table_object.c.close_timestamp.desc())
+                    .all()
+                )
+        else:
+            trades = (
+                self.session.query(table_object)
+                .filter_by(host_id=host_id, is_open=is_open)
+                .all()
+            )
+        if limit is not None:
+            return trades[:limit]
+        return trades
+
+    def get_trades_count(self, host_id: int, is_open: bool = True) -> int:
+        table_object = self.get_table_object(table_name="trades")
+        if is_open:
+            return len(
+                self.session.query(table_object)
+                .filter_by(host_id=host_id, is_open=1)
+                .all()
+            )
+        return len(
+            self.session.query(table_object).filter_by(host_id=host_id, is_open=0).all()
+        )
+
+    def get_trade_profit(self, host_id: int, quote_currency: str, is_open: bool = True):
+        table_object = self.get_table_object(table_name="trades")
+        filters = []
+        if is_open:
+            filters.append(table_object.c.is_open == 1)
+        else:
+            filters.append(table_object.c.is_open == 0)
+        filters.append(table_object.c.host_id == host_id)
+        filters.append(table_object.c.quote_currency == quote_currency)
+        result = (
+            self.session.query(func.sum(table_object.c.profit_abs))
+            .filter(*filters)
+            .scalar()
+        )
+        if result is None:
+            return 0.0
+        else:
+            return round(result, 2)
 
     def get_closed_orders_for_trade(self, trade_id):
         table_object = self.get_table_object(table_name="orders")
@@ -257,6 +417,7 @@ class Database:
         table_keys = table_object.columns.keys()
         for trade in data:
             trade = trade | {"host_id": host_id}
+            trade["trading_mode"] = trade["trading_mode"].upper()
             check = (
                 self.session.query(table_object)
                 .filter_by(host_id=host_id, trade_id=trade["trade_id"])
