@@ -8,14 +8,14 @@
                 </a>
             </li>
         </ul>
-
+        {% if data["instances"]["live"]|length > 0 %}
         <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-uppercase">
             <span>Live Instances</span>
         </h6>
         <ul class="nav flex-column mb-auto">
             {% for key, value in data["instances"]["live"].items() %}
             <li class="nav-item">
-                <a class="nav-link" href="instance/{{key}}" data-bs-toggle="tooltip" data-bs-title="{{ value['remote']}} {{value['local']}}">
+                <a class="nav-link" href="instance/{{key}}" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Remote: {{ value['remote']}}<br>Local: {{value['local']}}<br>">
                     <span data-feather="file-text" class="align-text-bottom">
                         {% if value["alert"] %}
                         <i class="fa-solid fa-triangle-exclamation text-warning" data-bs-toggle="tooltip" data-bs-title="Last update > 10mins"></i>
@@ -39,6 +39,8 @@
             </li>
             {% endfor %}
         </ul>
+        {% endif %}
+        {% if data["instances"]["dry"]|length > 0 %}
         <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-uppercase">
             <span>Dry Instances</span>
         </h6>
@@ -66,5 +68,6 @@
             </li>
             {% endfor %}
         </ul>
+        {% endif %}
     </div>
 </nav>
