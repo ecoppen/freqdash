@@ -28,6 +28,7 @@ class Scraper:
             config = self.get_config(tunnel=tunnel)
             if config:
                 log.info(f"Scraped {config['host']}")
+                config["trading_mode"] = config["trading_mode"].upper()
                 result = self.database.check_then_add_or_update_host(data=config)
                 sysinfo = self.get_sysinfo(tunnel=tunnel)
                 if sysinfo:
@@ -36,6 +37,10 @@ class Scraper:
                 last_open_trade_id = self.database.get_oldest_open_trade_id(
                     host_id=result
                 )
+                if last_open_trade_id > 20:
+                    last_open_trade_id -= 20
+                else:
+                    last_open_trade_id //= 2
                 log.info(f"last open trade id = {last_open_trade_id}")
                 closed_trades = self.get_closed_trades(
                     tunnel=tunnel, offset=last_open_trade_id
