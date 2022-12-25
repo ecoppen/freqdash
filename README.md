@@ -11,6 +11,8 @@ A python (3.11+) and Fastapi script to display a dashboard for your <a href="htt
 </p>
 
 ## Quickstart
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fecoppen%2Ffreqdash.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fecoppen%2Ffreqdash?ref=badge_shield)
+
 
 - Clone the repo `git clone https://github.com/ecoppen/freqdash.git`
 - Navigate to the repo root `cd freqdash`
@@ -26,3 +28,7 @@ A python (3.11+) and Fastapi script to display a dashboard for your <a href="htt
 ### Developers
 - Install developer requirements from pipenv `pipenv install --dev`
 - Install pre-commit hooks `pre-commit install`
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fecoppen%2Ffreqdash.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fecoppen%2Ffreqdash?ref=badge_large)
