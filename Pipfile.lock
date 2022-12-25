@@ -504,7 +504,6 @@
         "sha256:e9069e1b01525a96e6ff49e25876d90d5a563bc31c658289a8772ae186552236"
       ],
       "index": "pypi",
-      "markers": "python_version >= '3.7'",
       "version": "==1.10.2"
     },
     "pynacl": {
@@ -1215,14 +1214,6 @@
       "markers": "python_version >= '3.7'",
       "version": "==9.9"
     },
-    "pyparsing": {
-      "hashes": [
-        "sha256:2b020ecf7d21b687f219b71ecad3631f644a47f01403fa1d1036b0c6416d70fb",
-        "sha256:5026bae9a10eeaefb61dab2f09052b9f4307d44aee4eda64b309723d8d206bbc"
-      ],
-      "markers": "python_full_version >= '3.6.8'",
-      "version": "==3.0.9"
-    },
     "python-dateutil": {
       "hashes": [
         "sha256:0123cacc1627ae19ddf3c27a5de5bd67ee4586fbdd6440d9748f8abb483d3e86",
@@ -1385,14 +1376,6 @@
       ],
       "markers": "python_version >= '2.6' and python_version not in '3.0, 3.1, 3.2, 3.3'",
       "version": "==0.10.2"
-    },
-    "tomli": {
-      "hashes": [
-        "sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc",
-        "sha256:de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f"
-      ],
-      "markers": "python_full_version < '3.11.0a7'",
-      "version": "==2.0.1"
     },
     "typing-extensions": {
       "hashes": [
