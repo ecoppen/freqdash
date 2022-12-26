@@ -6,7 +6,8 @@
 A python (3.11+) and Fastapi script to display a dashboard for your <a href="https://www.freqtrade.io/en/stable/">freqtrade</a> database(s).
 </p>
 <p align="center">
-<img alt="GitHub Pipenv locked Python version" src="https://img.shields.io/github/pipenv/locked/python-version/ecoppen/freqdash">
+<img alt="GitHub Pipenv locked Python version" src="https://img.shields.io/github/pipenv/locked/python-version/ecoppen/freqdash"> 
+<a href="https://app.fossa.com/projects/git%2Bgithub.com%2Fecoppen%2Ffreqdash?ref=badge_shield"><img alt="FOSSA Status" src="https://app.fossa.com/api/projects/git%2Bgithub.com%2Fecoppen%2Ffreqdash.svg?type=shield"></a>
 <a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
 </p>
 
@@ -26,3 +27,7 @@ A python (3.11+) and Fastapi script to display a dashboard for your <a href="htt
 ### Developers
 - Install developer requirements from pipenv `pipenv install --dev`
 - Install pre-commit hooks `pre-commit install`
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fecoppen%2Ffreqdash.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fecoppen%2Ffreqdash?ref=badge_large)
