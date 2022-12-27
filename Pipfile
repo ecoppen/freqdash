@@ -21,8 +21,9 @@ isort = "*"
 mkdocs-material = "*"
 mypy = "*"
 pre-commit = "*"
-sqlalchemy = {extras = ["mypy"], version = "*"}
 pytest = "*"
+responses = "*"
+sqlalchemy = {extras = ["mypy"], version = "*"}
 
 [requires]
 python_version = "3.11"
