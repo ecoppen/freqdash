@@ -436,8 +436,6 @@ class Database:
                 self.session.query(table_object).filter_by(
                     host_id=host_id, trade_id=trade["trade_id"]
                 ).update(adjusted_trade)
-                self.session.commit()
-                self.session.flush()
 
             self.check_then_update_or_add_orders(
                 data=trade["orders"], host_id=host_id, trade_id=trade["trade_id"]
@@ -470,5 +468,6 @@ class Database:
                 self.session.query(table_object).filter_by(
                     host_id=host_id, trade_id=trade_id, order_id=order["order_id"]
                 ).update(adjusted_order)
-                self.session.commit()
-                self.session.flush()
+
+        self.session.commit()
+        self.session.flush()
