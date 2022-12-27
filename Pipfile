@@ -25,6 +25,7 @@ pre-commit = "*"
 pytest = "*"
 responses = "*"
 sqlalchemy = {extras = ["mypy"], version = "*"}
+types-freezegun = "*"
 
 [requires]
 python_version = "3.11"
