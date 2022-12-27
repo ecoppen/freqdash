@@ -17,6 +17,7 @@ uvicorn = {extras = ["standard"], version = "*"}
 bandit = "*"
 black = "*"
 flake8 = "*"
+freezegun = "*"
 isort = "*"
 mkdocs-material = "*"
 mypy = "*"
