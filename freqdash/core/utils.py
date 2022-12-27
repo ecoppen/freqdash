@@ -1,7 +1,6 @@
 import json
 import logging
 from datetime import datetime, timedelta
-from typing import Union
 from urllib.parse import urlencode
 
 import requests  # type: ignore
@@ -44,11 +43,14 @@ def dispatch_request(http_method, key=None, auth=None):
 def send_public_request(
     url: str,
     method: str = "GET",
-    payload: Union[dict, None] = None,
-    data: Union[dict, None] = None,
-    auth: Union[tuple, None] = None,
+    url_path: str | None = None,
+    payload: dict | None = None,
+    data: dict | None = None,
+    auth: tuple | None = None,
 ):
     empty_response = BlankResponse().content
+    if url_path is not None:
+        url += url_path
     if payload is None:
         payload = {}
     if data is None:
