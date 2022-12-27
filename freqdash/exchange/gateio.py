@@ -1,9 +1,9 @@
 import logging
 from decimal import Decimal
-from typing import Union
 
+from freqdash.core.utils import send_public_request
 from freqdash.exchange.exchange import Exchange
-from freqdash.exchange.utils import Intervals, Settle, send_public_request
+from freqdash.exchange.utils import Intervals, Settle
 
 log = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ class Gateio(Exchange):
         self.check_weight()
         params: dict = {"currency_pair": f"{base}_{quote}"}
         header, raw_json = send_public_request(
-            api_url=self.spot_api_url, url_path="/api/v4/spot/tickers", payload=params
+            url=self.spot_api_url, url_path="/api/v4/spot/tickers", payload=params
         )
         if len(raw_json) > 0:
             if "last" in [*raw_json[0]]:
@@ -35,7 +35,7 @@ class Gateio(Exchange):
         self.check_weight()
         params: dict = {}
         header, raw_json = send_public_request(
-            api_url=self.spot_api_url, url_path="/api/v4/spot/tickers", payload=params
+            url=self.spot_api_url, url_path="/api/v4/spot/tickers", payload=params
         )
         if len(raw_json) > 0:
             return [
@@ -49,8 +49,8 @@ class Gateio(Exchange):
         base: str,
         quote: str,
         interval: Intervals = Intervals.ONE_DAY,
-        start_time: Union[int, None] = None,
-        end_time: Union[int, None] = None,
+        start_time: int | None = None,
+        end_time: int | None = None,
         limit: int = 500,
     ) -> list:
         self.check_weight()
@@ -65,7 +65,7 @@ class Gateio(Exchange):
             params["to"] = end_time
 
         header, raw_json = send_public_request(
-            api_url=self.spot_api_url,
+            url=self.spot_api_url,
             url_path="/api/v4/spot/candlesticks",
             payload=params,
         )
@@ -92,7 +92,7 @@ class Gateio(Exchange):
         self.check_weight()
         params: dict = {}
         header, raw_json = send_public_request(
-            api_url=self.futures_api_url,
+            url=self.futures_api_url,
             url_path=f"/api/v4/futures/{settle}/contracts/{base}_{quote}",
             payload=params,
         )
@@ -108,7 +108,7 @@ class Gateio(Exchange):
         self.check_weight()
         params: dict = {}
         header, raw_json = send_public_request(
-            api_url=self.futures_api_url,
+            url=self.futures_api_url,
             url_path=f"/api/v4/futures/{settle}/contracts",
             payload=params,
         )
@@ -123,11 +123,11 @@ class Gateio(Exchange):
         self,
         base: str,
         quote: str,
-        start_time: Union[int, None] = None,
-        end_time: Union[int, None] = None,
+        start_time: int | None = None,
+        end_time: int | None = None,
         interval: Intervals = Intervals.ONE_DAY,
         limit: int = 500,
-        settle: Union[Settle, None] = Settle.USDT,
+        settle: Settle | None = Settle.USDT,
     ) -> list:
         self.check_weight()
         params: dict = {
@@ -144,7 +144,7 @@ class Gateio(Exchange):
             return []
 
         header, raw_json = send_public_request(
-            api_url=self.futures_api_url,
+            url=self.futures_api_url,
             url_path=f"/api/v4/futures/{settle}/candlesticks",
             payload=params,
         )

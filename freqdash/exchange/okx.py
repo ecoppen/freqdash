@@ -1,9 +1,9 @@
 import logging
 from decimal import Decimal
-from typing import Union
 
+from freqdash.core.utils import send_public_request
 from freqdash.exchange.exchange import Exchange
-from freqdash.exchange.utils import Intervals, Settle, send_public_request
+from freqdash.exchange.utils import Intervals, Settle
 
 log = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ class Okx(Exchange):
         params = {"instType": "SPOT", "instId": f"{base}-{quote}"}
 
         header, raw_json = send_public_request(
-            api_url=self.spot_api_url, url_path="/api/v5/market/ticker", payload=params
+            url=self.spot_api_url, url_path="/api/v5/market/ticker", payload=params
         )
         if "data" in [*raw_json]:
             if len(raw_json["data"]) > 0:
@@ -37,7 +37,7 @@ class Okx(Exchange):
         self.check_weight()
         params = {"instType": "SPOT"}
         header, raw_json = send_public_request(
-            api_url=self.spot_api_url, url_path="/api/v5/market/tickers", payload=params
+            url=self.spot_api_url, url_path="/api/v5/market/tickers", payload=params
         )
         if "data" in [*raw_json]:
             if len(raw_json["data"]) > 0:
@@ -55,8 +55,8 @@ class Okx(Exchange):
         base: str,
         quote: str,
         interval: Intervals = Intervals.ONE_DAY,
-        start_time: Union[int, None] = None,
-        end_time: Union[int, None] = None,
+        start_time: int | None = None,
+        end_time: int | None = None,
         limit: int = 500,
     ) -> list:
         self.check_weight()
@@ -80,7 +80,7 @@ class Okx(Exchange):
             params["before"] = end_time
 
         header, raw_json = send_public_request(
-            api_url=self.spot_api_url, url_path="/api/v5/market/candles", payload=params
+            url=self.spot_api_url, url_path="/api/v5/market/candles", payload=params
         )
 
         if "data" in [*raw_json]:
@@ -103,7 +103,7 @@ class Okx(Exchange):
         params = {"instId": f"{base}-{quote}"}
 
         header, raw_json = send_public_request(
-            api_url=self.futures_api_url,
+            url=self.futures_api_url,
             url_path="/api/v5/market/ticker",
             payload=params,
         )
@@ -117,7 +117,7 @@ class Okx(Exchange):
         self.check_weight()
         params = {"instType": "FUTURES"}
         header, raw_json = send_public_request(
-            api_url=self.futures_api_url,
+            url=self.futures_api_url,
             url_path="/api/v5/market/tickers",
             payload=params,
         )
@@ -137,9 +137,9 @@ class Okx(Exchange):
         base: str,
         quote: str,
         start_time: int,
-        end_time: Union[int, None] = None,
+        end_time: int | None = None,
         interval: Intervals = Intervals.ONE_DAY,
         limit: int = 500,
-        settle: Union[Settle, None] = None,
+        settle: Settle | None = None,
     ) -> list:
         return []

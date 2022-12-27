@@ -1,9 +1,9 @@
 import logging
 from decimal import Decimal
-from typing import Union
 
+from freqdash.core.utils import send_public_request
 from freqdash.exchange.exchange import Exchange
-from freqdash.exchange.utils import Intervals, Settle, send_public_request
+from freqdash.exchange.utils import Intervals, Settle
 
 log = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ class Binance(Exchange):
         self.check_weight()
         params: dict = {"symbol": f"{base}{quote}"}
         header, raw_json = send_public_request(
-            api_url=self.spot_api_url, url_path="/api/v3/ticker/price", payload=params
+            url=self.spot_api_url, url_path="/api/v3/ticker/price", payload=params
         )
         self.update_weight(int(header["X-MBX-USED-WEIGHT-1M"]))
         if "price" in [*raw_json]:
@@ -35,7 +35,7 @@ class Binance(Exchange):
         self.check_weight()
         params: dict = {}
         header, raw_json = send_public_request(
-            api_url=self.spot_api_url, url_path="/api/v3/ticker/price", payload=params
+            url=self.spot_api_url, url_path="/api/v3/ticker/price", payload=params
         )
         self.update_weight(int(header["X-MBX-USED-WEIGHT-1M"]))
         if len(raw_json) > 0:
@@ -50,8 +50,8 @@ class Binance(Exchange):
         base: str,
         quote: str,
         interval: Intervals = Intervals.ONE_DAY,
-        start_time: Union[int, None] = None,
-        end_time: Union[int, None] = None,
+        start_time: int | None = None,
+        end_time: int | None = None,
         limit: int = 500,
     ) -> list:
         self.check_weight()
@@ -66,7 +66,7 @@ class Binance(Exchange):
             params["endTime"] = end_time
 
         header, raw_json = send_public_request(
-            api_url=self.spot_api_url, url_path="/api/v3/klines", payload=params
+            url=self.spot_api_url, url_path="/api/v3/klines", payload=params
         )
         self.update_weight(int(header["X-MBX-USED-WEIGHT-1M"]))
         if len(raw_json) > 0:
@@ -87,7 +87,7 @@ class Binance(Exchange):
         self.check_weight()
         params: dict = {"symbol": f"{base}{quote}"}
         header, raw_json = send_public_request(
-            api_url=self.futures_api_url,
+            url=self.futures_api_url,
             url_path="/fapi/v1/ticker/price",
             payload=params,
         )
@@ -100,7 +100,7 @@ class Binance(Exchange):
         self.check_weight()
         params: dict = {}
         header, raw_json = send_public_request(
-            api_url=self.futures_api_url,
+            url=self.futures_api_url,
             url_path="/fapi/v1/ticker/price",
             payload=params,
         )
@@ -116,11 +116,11 @@ class Binance(Exchange):
         self,
         base: str,
         quote: str,
-        start_time: Union[int, None] = None,
-        end_time: Union[int, None] = None,
+        start_time: int | None = None,
+        end_time: int | None = None,
         interval: Intervals = Intervals.ONE_DAY,
         limit: int = 500,
-        settle: Union[Settle, None] = None,
+        settle: Settle | None = None,
     ) -> list:
         self.check_weight()
         params: dict = {
@@ -134,7 +134,7 @@ class Binance(Exchange):
             params["endTime"] = end_time
 
         header, raw_json = send_public_request(
-            api_url=self.futures_api_url, url_path="/fapi/v1/klines", payload=params
+            url=self.futures_api_url, url_path="/fapi/v1/klines", payload=params
         )
         self.update_weight(int(header["X-MBX-USED-WEIGHT-1M"]))
         if len(raw_json) > 0:
