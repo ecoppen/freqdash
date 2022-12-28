@@ -1,7 +1,6 @@
 import logging
 import time
 from decimal import Decimal
-from typing import Union
 
 from freqdash.exchange.utils import Intervals, Settle
 
@@ -12,11 +11,11 @@ class Exchange:
     def __init__(self):
         pass
 
-    exchange: Union[str, None] = None
-    spot_api_url: Union[str, None] = None
-    spot_trade_url: Union[str, None] = None
-    futures_api_url: Union[str, None] = None
-    futures_trade_url: Union[str, None] = None
+    exchange: str | None = None
+    spot_api_url: str | None = None
+    spot_trade_url: str | None = None
+    futures_api_url: str | None = None
+    futures_trade_url: str | None = None
     weight: int = 0
     max_weight: int = 100
 
@@ -41,8 +40,8 @@ class Exchange:
         base: str,
         quote: str,
         interval: Intervals = Intervals.ONE_DAY,
-        start_time: Union[int, None] = None,
-        end_time: Union[int, None] = None,
+        start_time: int | None = None,
+        end_time: int | None = None,
         limit: int = 500,
     ) -> list:
         return []
@@ -58,10 +57,10 @@ class Exchange:
         base: str,
         quote: str,
         start_time: int,
-        end_time: Union[int, None] = None,
+        end_time: int | None = None,
         interval: Intervals = Intervals.ONE_DAY,
         limit: int = 500,
-        settle: Union[Settle, None] = None,
+        settle: Settle | None = None,
     ) -> list:
         return []
 
