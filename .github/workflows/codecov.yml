@@ -1,10 +1,10 @@
 name: Workflow for Codecov
 on: [push, pull_request]
-ignore:
-  - tests
 jobs:
   run:
     runs-on: ubuntu-latest
+    ignore:
+      - tests
     steps:
       - name: Checkout
         uses: actions/checkout@v2
