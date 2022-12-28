@@ -45,7 +45,6 @@ def send_public_request(
     method: str = "GET",
     url_path: str | None = None,
     payload: dict | None = None,
-    data: dict | None = None,
     auth: tuple | None = None,
 ):
     empty_response = BlankResponse().content
@@ -53,8 +52,6 @@ def send_public_request(
         url += url_path
     if payload is None:
         payload = {}
-    if data is None:
-        data = {}
     query_string = urlencode(payload, True)
     if query_string:
         url = url + "?" + query_string
@@ -62,12 +59,7 @@ def send_public_request(
     log.info(f"Requesting {url}")
 
     try:
-        if data:
-            response = dispatch_request(method)(
-                url=url, data=json.dumps(data), auth=auth, timeout=5
-            )
-        else:
-            response = dispatch_request(method)(url=url, auth=auth, timeout=5)
+        response = dispatch_request(method)(url=url, auth=auth, timeout=5)
         headers = response.headers
         json_response = response.json()
         if "code" in json_response and "msg" in json_response:
