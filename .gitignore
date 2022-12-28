@@ -138,3 +138,4 @@ log.txt
 /ssh_keys/*
 !/ssh_keys/.gitkeep
 node_modules
+coverage.xml
