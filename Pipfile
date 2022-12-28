@@ -16,6 +16,7 @@ uvicorn = {extras = ["standard"], version = "*"}
 [dev-packages]
 bandit = "*"
 black = "*"
+codecov = "*"
 flake8 = "*"
 freezegun = "*"
 isort = "*"
@@ -23,6 +24,7 @@ mkdocs-material = "*"
 mypy = "*"
 pre-commit = "*"
 pytest = "*"
+pytest-cov = "*"
 responses = "*"
 sqlalchemy = {extras = ["mypy"], version = "*"}
 types-freezegun = "*"
