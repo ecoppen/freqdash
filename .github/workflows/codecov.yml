@@ -1,10 +1,10 @@
 name: Workflow for Codecov
 on:
   push:
-    paths-ignore:
+    ignore:
       - "tests"
   pull_request:
-    paths-ignore:
+    ignore:
       - "tests"
 
 jobs:
