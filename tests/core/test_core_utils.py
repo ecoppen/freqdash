@@ -1,5 +1,6 @@
 import unittest
 
+import requests  # type: ignore
 import responses
 from freezegun import freeze_time
 
@@ -36,7 +37,34 @@ class TestUtils(unittest.TestCase):
         assert end_milliseconds_ago(5) == 1671580799999
 
     @responses.activate
-    def test_HTTPRequestError(self):
+    def test_payload(self):
+        responses.get(
+            url="http://api.freqdash.com/test?limit=5",
+            body='{"value": "5"}',
+            status=200,
+            content_type="application/json",
+            headers={"X-MBX-USED-WEIGHT-1M": "1"},
+        )
+        headers, json_response = send_public_request(
+            url="http://api.freqdash.com/", url_path="test", payload={"limit": 5}
+        )
+        assert headers == {
+            "Content-Type": "application/json",
+            "X-MBX-USED-WEIGHT-1M": "1",
+        }
+        assert json_response == {"value": "5"}
+
+    def test_HTTPRequestError_direct(self):
+        error = HTTPRequestError(
+            url="http://api.freqdash.com/error", code=429, msg="Rate limited"
+        )
+        assert (
+            error.__str__()
+            == "Request to 'http://api.freqdash.com/error' failed. Code: 429; Message: Rate limited"
+        )
+
+    @responses.activate
+    def test_HTTPRequestError_indirect(self):
         responses.get(
             url="http://api.freqdash.com/error",
             body='{"code": "429", "msg": "Rate limited"}',
@@ -50,6 +78,51 @@ class TestUtils(unittest.TestCase):
                 "Request to 'http://api.freqdash.com/error' failed. Code: 429; Message: Rate limited",
                 str(cm.exception),
             )
+
+    @responses.activate
+    def test_Timeout_exception(self):
+        responses.get(
+            url="http://api.freqdash.com/error",
+            body=requests.exceptions.Timeout(),
+            status=200,
+            content_type="application/json",
+            headers={"X-MBX-USED-WEIGHT-1M": "1"},
+        )
+        headers, json_response = send_public_request(
+            url="http://api.freqdash.com/", url_path="error"
+        )
+        assert headers == ""
+        assert json_response == ""
+
+    @responses.activate
+    def test_toomanyredirects_exception(self):
+        responses.get(
+            url="http://api.freqdash.com/error",
+            body=requests.exceptions.TooManyRedirects(),
+            status=200,
+            content_type="application/json",
+            headers={"X-MBX-USED-WEIGHT-1M": "1"},
+        )
+        headers, json_response = send_public_request(
+            url="http://api.freqdash.com/", url_path="error"
+        )
+        assert headers == ""
+        assert json_response == ""
+
+    @responses.activate
+    def test_request_exception(self):
+        responses.get(
+            url="http://api.freqdash.com/error",
+            body=requests.exceptions.RequestException(),
+            status=200,
+            content_type="application/json",
+            headers={"X-MBX-USED-WEIGHT-1M": "1"},
+        )
+        headers, json_response = send_public_request(
+            url="http://api.freqdash.com/", url_path="error"
+        )
+        assert headers == ""
+        assert json_response == ""
 
 
 if __name__ == "__main__":
