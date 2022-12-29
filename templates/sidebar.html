@@ -21,13 +21,13 @@
                         <i class="fa-solid fa-triangle-exclamation text-warning" data-bs-toggle="tooltip" data-bs-title="Last update > 10mins"></i>
                         {% endif %}
                         {% if value["status"] == "running" %}
-                            {% if value["trading_mode"] == "spot" %}
+                            {% if value["trading_mode"] == "SPOT" %}
                                 <i class="fa-solid fa-circle text-success" data-bs-toggle="tooltip" data-bs-title="Spot - Running"></i>
                             {% else %}
                                 <i class="fa-solid fa-diamond text-success" data-bs-toggle="tooltip" data-bs-title="Futures - Running"></i>
                             {% endif %}
                         {% elif value["status"] == "stopped" %}
-                            {% if value["trading_mode"] == "spot" %}
+                            {% if value["trading_mode"] == "SPOT" %}
                                 <i class="fa-solid fa-circle text-danger" data-bs-toggle="tooltip" data-bs-title="Spot - Stopped"></i>
                             {% else %}
                                 <i class="fa-solid fa-diamond text-danger" data-bs-toggle="tooltip" data-bs-title="Futures - Stopped"></i>
@@ -50,13 +50,13 @@
                 <a class="nav-link" href="#">
                     <span data-feather="file-text" class="align-text-bottom">
                         {% if value["status"] == "running" %}
-                            {% if value["trading_mode"] == "spot" %}
+                            {% if value["trading_mode"] == "SPOT" %}
                                 <i class="fa-solid fa-circle text-success"></i>
                             {% else %}
                                 <i class="fa-solid fa-diamond text-success"></i>
                             {% endif %}
                         {% elif value["status"] == "stopped" %}
-                            {% if value["trading_mode"] == "spot" %}
+                            {% if value["trading_mode"] == "SPOT" %}
                                 <i class="fa-solid fa-circle text-danger"></i>
                             {% else %}
                                 <i class="fa-solid fa-diamond text-danger"></i>
