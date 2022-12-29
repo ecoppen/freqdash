@@ -8,7 +8,7 @@ from freqdash.exchange.binance import Binance
 from freqdash.exchange.utils import Intervals
 
 
-class TestUtils(unittest.TestCase):
+class TestBinanceExchange(unittest.TestCase):
     def test_attributes(self):
         binance = Binance()
         assert binance.exchange == "binance"

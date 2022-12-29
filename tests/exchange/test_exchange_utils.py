@@ -3,7 +3,7 @@ import unittest
 from freqdash.exchange.utils import Exchanges, Intervals, Markets, Settle
 
 
-class TestUtils(unittest.TestCase):
+class TestExchangeUtils(unittest.TestCase):
     def test_exchanges_dataclass(self):
         assert Exchanges.BINANCE.value == "binance"
         assert Exchanges.BYBIT.value == "bybit"

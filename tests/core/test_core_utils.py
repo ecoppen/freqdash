@@ -15,7 +15,7 @@ from freqdash.core.utils import (
 )
 
 
-class TestUtils(unittest.TestCase):
+class TestCoreUtils(unittest.TestCase):
     def test_BlankResponse(self):
         blank = BlankResponse()
         assert blank.content == ""
