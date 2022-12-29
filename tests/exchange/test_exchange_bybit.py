@@ -187,6 +187,50 @@ class TestBybitExchange(unittest.TestCase):
         assert spot_kline == []
 
     @responses.activate
+    def test_get_futures_kline_valid_end_time(self):
+        bybit = Bybit()
+        responses.get(
+            url=f"{bybit.futures_api_url}/public/linear/kline?symbol=BTCUSDT&interval=D&limit=3&from=1632009600",
+            body='{"ret_code":0,"ret_msg":"OK","ext_code":"","ext_info":"","result":[{"id":12501243,"symbol":"BTCUSDT","period":"D","interval":"D","start_at":1632009600,"open_time":1632009600,"volume":34445.799,"open":48300,"high":48340.5,"low":46880,"close":47274.5,"turnover":1628407924.8255},{"id":12566235,"symbol":"BTCUSDT","period":"D","interval":"D","start_at":1632096000,"open_time":1632096000,"volume":91656.427,"open":47274.5,"high":47342,"low":42500,"close":43057,"turnover":3946450777.339},{"id":12631266,"symbol":"BTCUSDT","period":"D","interval":"D","start_at":1632182400,"open_time":1632182400,"volume":102692.021,"open":43057,"high":43600,"low":39520,"close":40724.5,"turnover":4182081209.2145}],"time_now":"1672326571.664846"}',
+            status=200,
+            content_type="application/json",
+        )
+        futures_kline = bybit.get_futures_kline(
+            base="BTC",
+            quote="USDT",
+            start_time=1632009600,
+            end_time=1632182400,
+            interval=Intervals.ONE_DAY,
+            limit=3,
+        )
+        assert futures_kline == [
+            {
+                "timestamp": 1632009600,
+                "open": Decimal("48300"),
+                "high": Decimal("48340.5"),
+                "low": Decimal("46880"),
+                "close": Decimal("47274.5"),
+                "volume": Decimal(34445.799),
+            },
+            {
+                "timestamp": 1632096000,
+                "open": Decimal("47274.5"),
+                "high": Decimal("47342"),
+                "low": Decimal("42500"),
+                "close": Decimal("43057"),
+                "volume": Decimal(91656.427),
+            },
+            {
+                "timestamp": 1632182400,
+                "open": Decimal("43057"),
+                "high": Decimal("43600"),
+                "low": Decimal("39520"),
+                "close": Decimal("40724.5"),
+                "volume": Decimal(102692.021),
+            },
+        ]
+
+    @responses.activate
     def test_get_futures_kline_valid(self):
         bybit = Bybit()
         responses.get(
