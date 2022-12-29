@@ -13,7 +13,7 @@ class Gateio(Exchange):
         super().__init__()
         log.info("Gate.io initialised")
 
-    exchange = "gate.io"
+    exchange = "gateio"
     spot_api_url = "https://api.gateio.ws"
     spot_trade_url = "https://www.gate.io/trade/BASE_QUOTE"
     futures_api_url = "https://api.gateio.ws"
