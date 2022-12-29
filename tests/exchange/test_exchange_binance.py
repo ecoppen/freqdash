@@ -23,42 +23,42 @@ class TestBinanceExchange(unittest.TestCase):
 
     @responses.activate
     def test_get_spot_price_valid(self):
+        binance = Binance()
         responses.get(
-            url="https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT",
+            url=f"{binance.spot_api_url}/api/v3/ticker/price?symbol=BTCUSDT",
             body='{"price": "16605.48"}',
             status=200,
             content_type="application/json",
             headers={"X-MBX-USED-WEIGHT-1M": "10"},
         )
-        binance = Binance()
         spot_price = binance.get_spot_price(base="BTC", quote="USDT")
         assert spot_price == Decimal("16605.48")
         assert binance.weight == 10
 
     @responses.activate
     def test_get_spot_price_invalid(self):
+        binance = Binance()
         responses.get(
-            url="https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT",
+            url=f"{binance.spot_api_url}/api/v3/ticker/price?symbol=BTCUSDT",
             body="{}",
             status=200,
             content_type="application/json",
             headers={"X-MBX-USED-WEIGHT-1M": "10"},
         )
-        binance = Binance()
         spot_price = binance.get_spot_price(base="BTC", quote="USDT")
         assert spot_price == Decimal(-1.0)
         assert binance.weight == 10
 
     @responses.activate
     def test_get_spot_prices_valid(self):
+        binance = Binance()
         responses.get(
-            url="https://api.binance.com/api/v3/ticker/price",
+            url=f"{binance.spot_api_url}/api/v3/ticker/price",
             body='[{"symbol": "ETHBTC", "price": "0.07192"}, {"symbol": "LTCBTC", "price": "0.004054"}]',
             status=200,
             content_type="application/json",
             headers={"X-MBX-USED-WEIGHT-1M": "10"},
         )
-        binance = Binance()
         spot_prices = binance.get_spot_prices()
         assert spot_prices == [
             {"symbol": "ETHBTC", "price": Decimal("0.07192")},
@@ -68,56 +68,56 @@ class TestBinanceExchange(unittest.TestCase):
 
     @responses.activate
     def test_get_spot_prices_invalid(self):
+        binance = Binance()
         responses.get(
-            url="https://api.binance.com/api/v3/ticker/price",
+            url=f"{binance.spot_api_url}/api/v3/ticker/price",
             body="[]",
             status=200,
             content_type="application/json",
             headers={"X-MBX-USED-WEIGHT-1M": "10"},
         )
-        binance = Binance()
         spot_prices = binance.get_spot_prices()
         assert spot_prices == []
         assert binance.weight == 10
 
     @responses.activate
     def test_get_futures_price_valid(self):
+        binance = Binance()
         responses.get(
-            url="https://fapi.binance.com/fapi/v1/ticker/price?symbol=BTCUSDT",
+            url=f"{binance.futures_api_url}/fapi/v1/ticker/price?symbol=BTCUSDT",
             body='{"price": "16605.48"}',
             status=200,
             content_type="application/json",
             headers={"X-MBX-USED-WEIGHT-1M": "10"},
         )
-        binance = Binance()
         futures_price = binance.get_futures_price(base="BTC", quote="USDT")
         assert futures_price == Decimal("16605.48")
         assert binance.weight == 10
 
     @responses.activate
     def test_get_futures_price_invalid(self):
+        binance = Binance()
         responses.get(
-            url="https://fapi.binance.com/fapi/v1/ticker/price?symbol=BTCUSDT",
+            url=f"{binance.futures_api_url}/fapi/v1/ticker/price?symbol=BTCUSDT",
             body="{}",
             status=200,
             content_type="application/json",
             headers={"X-MBX-USED-WEIGHT-1M": "10"},
         )
-        binance = Binance()
         futures_price = binance.get_futures_price(base="BTC", quote="USDT")
         assert futures_price == Decimal(-1.0)
         assert binance.weight == 10
 
     @responses.activate
     def test_get_futures_prices_valid(self):
+        binance = Binance()
         responses.get(
-            url="https://fapi.binance.com/fapi/v1/ticker/price",
+            url=f"{binance.futures_api_url}/fapi/v1/ticker/price",
             body='[{"symbol": "XRPBUSD", "price": "0.3592"}, {"symbol": "MKRUSDT", "price": "526.2"}]',
             status=200,
             content_type="application/json",
             headers={"X-MBX-USED-WEIGHT-1M": "10"},
         )
-        binance = Binance()
         futures_prices = binance.get_futures_prices()
         assert futures_prices == [
             {"symbol": "XRPBUSD", "price": Decimal("0.3592")},
@@ -127,28 +127,28 @@ class TestBinanceExchange(unittest.TestCase):
 
     @responses.activate
     def test_get_futures_prices_invalid(self):
+        binance = Binance()
         responses.get(
-            url="https://fapi.binance.com/fapi/v1/ticker/price",
+            url=f"{binance.futures_api_url}/fapi/v1/ticker/price",
             body="[]",
             status=200,
             content_type="application/json",
             headers={"X-MBX-USED-WEIGHT-1M": "10"},
         )
-        binance = Binance()
         futures_prices = binance.get_futures_prices()
         assert futures_prices == []
         assert binance.weight == 10
 
     @responses.activate
     def test_get_spot_kline_valid(self):
+        binance = Binance()
         responses.get(
-            url="https://api.binance.com/api/v3/klines?symbol=STMXUSDT&interval=1d&limit=500&startTime=1632009600000&endTime=1632182400000",
+            url=f"{binance.spot_api_url}/api/v3/klines?symbol=STMXUSDT&interval=1d&limit=500&startTime=1632009600000&endTime=1632182400000",
             body='[[1632009600000,"0.03515000","0.03518000","0.03277000","0.03337000","127617246.00000000",1632095999999,"4327991.04616000",15680,"64375971.00000000","2182522.22624000","0"],[1632096000000,"0.03336000","0.03344000","0.02689000","0.02786000","337670129.00000000",1632182399999,"9944265.78278600",30983,"172004389.00000000","5064091.80455000","0"],[1632182400000,"0.02786000","0.02866000","0.02418000","0.02481000","441562231.00000000",1632268799999,"11701702.31097000",33681,"229838713.00000000","6085871.73077800","0"]]',
             status=200,
             content_type="application/json",
             headers={"X-MBX-USED-WEIGHT-1M": "10"},
         )
-        binance = Binance()
         spot_kline = binance.get_spot_kline(
             base="STMX",
             quote="USDT",
@@ -187,14 +187,14 @@ class TestBinanceExchange(unittest.TestCase):
 
     @responses.activate
     def test_get_spot_kline_invalid(self):
+        binance = Binance()
         responses.get(
-            url="https://api.binance.com/api/v3/klines?symbol=STMXUSDT&interval=1d&limit=500&startTime=1632009600000&endTime=1632182400000",
+            url=f"{binance.spot_api_url}/api/v3/klines?symbol=STMXUSDT&interval=1d&limit=500&startTime=1632009600000&endTime=1632182400000",
             body="{}",
             status=200,
             content_type="application/json",
             headers={"X-MBX-USED-WEIGHT-1M": "10"},
         )
-        binance = Binance()
         spot_kline = binance.get_spot_kline(
             base="STMX",
             quote="USDT",
@@ -208,14 +208,14 @@ class TestBinanceExchange(unittest.TestCase):
 
     @responses.activate
     def test_get_futures_kline_valid(self):
+        binance = Binance()
         responses.get(
-            url="https://fapi.binance.com/fapi/v1/klines?symbol=STMXUSDT&interval=1d&limit=500&startTime=1632009600000&endTime=1632182400000",
+            url=f"{binance.futures_api_url}/fapi/v1/klines?symbol=STMXUSDT&interval=1d&limit=500&startTime=1632009600000&endTime=1632182400000",
             body='[[1632009600000,"0.03515000","0.03518000","0.03277000","0.03337000","127617246.00000000",1632095999999,"4327991.04616000",15680,"64375971.00000000","2182522.22624000","0"],[1632096000000,"0.03336000","0.03344000","0.02689000","0.02786000","337670129.00000000",1632182399999,"9944265.78278600",30983,"172004389.00000000","5064091.80455000","0"],[1632182400000,"0.02786000","0.02866000","0.02418000","0.02481000","441562231.00000000",1632268799999,"11701702.31097000",33681,"229838713.00000000","6085871.73077800","0"]]',
             status=200,
             content_type="application/json",
             headers={"X-MBX-USED-WEIGHT-1M": "10"},
         )
-        binance = Binance()
         futures_kline = binance.get_futures_kline(
             base="STMX",
             quote="USDT",
@@ -254,14 +254,14 @@ class TestBinanceExchange(unittest.TestCase):
 
     @responses.activate
     def test_get_futures_kline_invalid(self):
+        binance = Binance()
         responses.get(
-            url="https://fapi.binance.com/fapi/v1/klines?symbol=STMXUSDT&interval=1d&limit=500&startTime=1632009600000&endTime=1632182400000",
+            url=f"{binance.futures_api_url}/fapi/v1/klines?symbol=STMXUSDT&interval=1d&limit=500&startTime=1632009600000&endTime=1632182400000",
             body="{}",
             status=200,
             content_type="application/json",
             headers={"X-MBX-USED-WEIGHT-1M": "10"},
         )
-        binance = Binance()
         futures_kline = binance.get_futures_kline(
             base="STMX",
             quote="USDT",
