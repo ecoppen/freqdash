@@ -122,7 +122,7 @@ class Bybit(Exchange):
         start_time: int,
         end_time: int | None = None,
         interval: Intervals = Intervals.ONE_DAY,
-        limit: int = 500,
+        limit: int = 200,
         settle: Settle | None = None,
     ) -> list:
         self.check_weight()
@@ -142,9 +142,6 @@ class Bybit(Exchange):
             "from": start_time,
         }
 
-        if end_time is not None:
-            params["endTime"] = end_time
-
         header, raw_json = send_public_request(
             url=self.futures_api_url,
             url_path="/public/linear/kline",
@@ -153,6 +150,19 @@ class Bybit(Exchange):
 
         if "result" in [*raw_json]:
             if len(raw_json["result"]) > 0:
+                if end_time is not None:
+                    return [
+                        {
+                            "timestamp": int(candle["open_time"]),
+                            "open": Decimal(candle["open"]),
+                            "high": Decimal(candle["high"]),
+                            "low": Decimal(candle["low"]),
+                            "close": Decimal(candle["close"]),
+                            "volume": Decimal(candle["volume"]),
+                        }
+                        for candle in raw_json["result"]
+                        if int(candle["open_time"]) <= end_time
+                    ]
                 return [
                     {
                         "timestamp": int(candle["open_time"]),
