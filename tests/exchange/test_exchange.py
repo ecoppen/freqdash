@@ -53,5 +53,15 @@ class TestExchange(unittest.TestCase):
 
     def test_get_futures_kline(self):
         exchange = Exchange()
-        futures_kline = exchange.get_spot_kline(base="BTC", quote="USDT")
+        futures_kline = exchange.get_futures_kline(
+            base="BTC", quote="USDT", start_time=1632009600000
+        )
         assert futures_kline == []
+
+    def test_get_spot_trade_url(self):
+        exchange = Exchange()
+        assert exchange.get_spot_trade_url() is None
+
+    def test_get_futures_trade_url(self):
+        exchange = Exchange()
+        assert exchange.get_futures_trade_url() is None
