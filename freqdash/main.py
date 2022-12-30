@@ -2,12 +2,10 @@ import logging
 import os
 import threading
 import time
-from datetime import datetime
-from decimal import Decimal
 from pathlib import Path
 from typing import Union
 
-from fastapi import BackgroundTasks, FastAPI, Request
+from fastapi import FastAPI, Request
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -15,11 +13,6 @@ from fastapi.templating import Jinja2Templates
 
 from freqdash.connection.factory import load_tunnels
 from freqdash.core.config import load_config
-from freqdash.core.utils import (
-    end_datetime_ago,
-    send_public_request,
-    start_datetime_ago,
-)
 from freqdash.exchange.factory import load_exchanges
 from freqdash.exchange.utils import Exchanges, Intervals, Markets
 from freqdash.models.database import Database
