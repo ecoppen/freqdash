@@ -166,6 +166,13 @@ class Database:
                     hosts[host[8]][host[0]]["closed_trades"] = self.get_trades_count(
                         host_id=host[0], is_open=False
                     )
+                    hosts[host[8]][host[0]]["winning_trades"] = self.get_trades_count(
+                        host_id=host[0], is_open=False, won=True
+                    )
+                    hosts[host[8]][host[0]]["losing_trades"] = (
+                        hosts[host[8]][host[0]]["closed_trades"]
+                        - hosts[host[8]][host[0]]["winning_trades"]
+                    )
                     hosts[host[8]][host[0]]["closed_profit"] = self.get_trade_profit(
                         host_id=host[0], is_open=False, quote_currency=host[6]
                     )
@@ -291,20 +298,12 @@ class Database:
         table_object = self.get_table_object(table_name="trades")
         int_is_open: int = 1 if is_open else 0
         if sort:
-            if is_open:
-                trades = (
-                    self.session.query(table_object)
-                    .filter_by(host_id=host_id, is_open=int_is_open)
-                    .order_by(table_object.c.open_timestamp.asc())
-                    .all()
-                )
-            else:
-                trades = (
-                    self.session.query(table_object)
-                    .filter_by(host_id=host_id, is_open=int_is_open)
-                    .order_by(table_object.c.close_timestamp.desc())
-                    .all()
-                )
+            trades = (
+                self.session.query(table_object)
+                .filter_by(host_id=host_id, is_open=int_is_open)
+                .order_by(table_object.c.close_timestamp.desc())
+                .all()
+            )
         else:
             trades = (
                 self.session.query(table_object)
@@ -315,16 +314,23 @@ class Database:
             return trades[:limit]
         return trades
 
-    def get_trades_count(self, host_id: int, is_open: bool = True) -> int:
+    def get_trades_count(
+        self, host_id: int, is_open: bool = True, won: bool | None = None
+    ) -> int:
         table_object = self.get_table_object(table_name="trades")
-        if is_open:
-            return len(
-                self.session.query(table_object)
-                .filter_by(host_id=host_id, is_open=1)
-                .all()
-            )
-        return len(
-            self.session.query(table_object).filter_by(host_id=host_id, is_open=0).all()
+        int_is_open: int = 1 if is_open else 0
+        filters = []
+        if won is not None:
+            if won:
+                filters.append(table_object.c.profit_abs >= 0)
+            else:
+                filters.append(table_object.c.profit_abs < 0)
+        filters.append(table_object.c.host_id == host_id)
+        filters.append(table_object.c.is_open == int_is_open)
+        return (
+            self.session.query(func.count(table_object.c.trade_id))
+            .filter(*filters)
+            .scalar()
         )
 
     def get_trade_profit(self, host_id: int, quote_currency: str, is_open: bool = True):
@@ -412,7 +418,7 @@ class Database:
         else:
             return result[1]
 
-    def check_then_add_trades(self, data: dict, host_id: int):
+    def check_then_add_trades(self, data: list, host_id: int):
         table_object = self.get_table_object(table_name="trades")
         table_keys = table_object.columns.keys()
         for trade in data:
