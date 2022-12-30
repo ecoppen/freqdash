@@ -3,12 +3,13 @@ import logging
 import requests  # type: ignore
 
 from freqdash.core.utils import send_public_request
+from freqdash.models.database import Database
 
 log = logging.getLogger(__name__)
 
 
 class Scraper:
-    def __init__(self, tunnels, database) -> None:
+    def __init__(self, tunnels: list, database: Database) -> None:
         self.tunnels = tunnels
         self.database = database
 
