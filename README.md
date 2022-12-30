@@ -3,7 +3,7 @@
 </h1>
 
 <p align="center">
-A python (3.11+) and Fastapi script to display a dashboard for your <a href="https://www.freqtrade.io/en/stable/">freqtrade</a> database(s).
+A python (3.11+) and Fastapi script to display a dashboard for your <a href="https://www.freqtrade.io/en/stable/">freqtrade</a> instances(s) via SSH .
 </p>
 <p align="center">
 <img alt="GitHub Pipenv locked Python version" src="https://img.shields.io/github/pipenv/locked/python-version/ecoppen/freqdash"> 
