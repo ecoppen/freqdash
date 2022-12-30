@@ -13,8 +13,8 @@ from pydantic import (
 class LocalFreqtradeAPI(BaseModel):
     local_host: IPvAnyAddress = IPvAnyAddress.validate("127.0.0.1")
     local_port: int = Field(5432, ge=1, le=65535)
-    api_username: str
-    api_password: str
+    api_username: str = Field(min_length=1)
+    api_password: str = Field(min_length=1)
 
 
 class RemoteFreqtradeAPI(BaseModel):
@@ -22,11 +22,11 @@ class RemoteFreqtradeAPI(BaseModel):
     ssh_port: int = Field(5432, ge=1, le=65535)
     ssh_username: str | None
     ssh_pkey_filename: str | None
-    ssh_password: str
+    ssh_password: str = Field(min_length=1)
     remote_host: IPvAnyAddress = IPvAnyAddress.validate("127.0.0.1")
     remote_port: int = Field(5432, ge=1, le=65535)
-    api_username: str
-    api_password: str
+    api_username: str = Field(min_length=1)
+    api_password: str = Field(min_length=1)
 
     @root_validator
     def check_username_or_pkey(cls, values):
