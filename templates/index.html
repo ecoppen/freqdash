@@ -35,6 +35,8 @@
                           <th scope="col">Mode</th>
                           <th scope="col">Status</th>
                           <th scope="col">Closed trades</th>
+                          <th scope="col">Won</th>
+                          <th scope="col">Lost</th>
                           <th scope="col">Closed profit</th>
                           <th scope="col">Open trades</th>
                           <th scope="col">Open profit</th>
@@ -53,6 +55,8 @@
                           <td>{{value["trading_mode"]}}</td>
                           <td>{{value["status"]}}</td>
                           <td>{{value["closed_trades"]}}</td>
+                          <td>{{value["winning_trades"]}}</td>
+                          <td>{{value["losing_trades"]}}</td>
                             {% if value["closed_profit"] >= 0 %}
                           <td class="table-success">
                               {% else %}
@@ -97,6 +101,8 @@
                           <th scope="col">Mode</th>
                           <th scope="col">Status</th>
                           <th scope="col">Closed trades</th>
+                          <th scope="col">Won</th>
+                          <th scope="col">Lost</th>
                           <th scope="col">Closed profit</th>
                           <th scope="col">Open trades</th>
                           <th scope="col">Open profit</th>
@@ -115,6 +121,8 @@
                           <td>{{value["trading_mode"]}}</td>
                           <td>{{value["status"]}}</td>
                           <td>{{value["closed_trades"]}}</td>
+                          <td>{{value["winning_trades"]}}</td>
+                          <td>{{value["losing_trades"]}}</td>
                          {% if value["closed_profit"] >= 0 %}
                           <td class="table-success">
                               {% else %}
