@@ -14,15 +14,6 @@ log = logging.getLogger(__name__)
 Base = declarative_base()
 
 
-class User(Base):  # type: ignore
-    __tablename__ = "user"
-
-    id = Column(Integer, primary_key=True)
-    name = Column(String)
-    fullname = Column(String)
-    nickname = Column(String)
-
-
 class Database:
     def __init__(self, path: Path) -> None:
         self.engine = db.create_engine(
