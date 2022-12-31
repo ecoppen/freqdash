@@ -1,6 +1,6 @@
 import unittest
 
-from pydantic import BaseModel, Field, IPvAnyAddress, ValidationError
+from pydantic import IPvAnyAddress, ValidationError
 
 from freqdash.core.config import (
     Config,
@@ -234,6 +234,23 @@ class TestCoreConfig(unittest.TestCase):
                 remote_port="1",
                 api_username="test",
                 api_password="",
+            )
+
+    def test_Config_validators(self):
+        with self.assertRaises(ValueError):
+            Config(
+                local_freqtrade_instances=[],
+                remote_freqtrade_instances=None,
+                scrape_interval=299,
+                database_name="freqdash",
+            )
+
+        with self.assertRaises(ValueError):
+            Config(
+                local_freqtrade_instances=None,
+                remote_freqtrade_instances=None,
+                scrape_interval=300,
+                database_name="freqdash",
             )
 
 
