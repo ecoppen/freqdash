@@ -45,6 +45,7 @@ def send_public_request(
     url_path: str | None = None,
     payload: dict | None = None,
     auth: tuple | None = None,
+    access_token: str | None = None,
 ):
     empty_response = BlankResponse().content
     if url_path is not None:
@@ -56,9 +57,12 @@ def send_public_request(
         url = url + "?" + query_string
 
     log.info(f"Requesting {url}")
+    headers = {"Authorization": f"Bearer {access_token}"}
 
     try:
-        response = dispatch_request(method)(url=url, auth=auth, timeout=5)
+        response = dispatch_request(method)(
+            url=url, auth=auth, timeout=5, headers=headers
+        )
         headers = response.headers
         json_response = response.json()
         if "code" in json_response and "msg" in json_response:

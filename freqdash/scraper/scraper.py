@@ -26,6 +26,7 @@ class Scraper:
     def scrape_cycle(self) -> None:
         for tunnel in self.tunnels:
             tunnel.start()
+            tunnel.jwt = self.get_jwt_token(tunnel=tunnel)
             config = self.get_config(tunnel=tunnel)
             if config:
                 log.info(f"Scraped {config['host']}")
@@ -50,15 +51,24 @@ class Scraper:
                 self.database.check_then_add_trades(data=closed_trades, host_id=result)
                 open_trades = self.get_open_trades(tunnel=tunnel)
                 self.database.check_then_add_trades(data=open_trades, host_id=result)
-
+            tunnel.jwt = None
             tunnel.stop()
+
+    def get_jwt_token(self, tunnel) -> str:
+        basepath = f"http://{tunnel.remote_host}:{tunnel.local_bind_port}/api/v1/"
+        headers, json = send_public_request(
+            url=basepath + "token/login",
+            method="POST",
+            auth=(tunnel.api_username, tunnel.api_password),
+        )
+        return json["access_token"]
 
     def get_config(self, tunnel) -> dict:
         basepath = f"http://{tunnel.remote_host}:{tunnel.local_bind_port}/api/v1/"
         headers, json = send_public_request(
             url=basepath + "show_config",
             method="GET",
-            auth=(tunnel.api_username, tunnel.api_password),
+            access_token=tunnel.jwt,
         )
         data: dict = {}
         if "version" in [*json]:
@@ -82,7 +92,7 @@ class Scraper:
         headers, json = send_public_request(
             url=basepath + "sysinfo",
             method="GET",
-            auth=(tunnel.api_username, tunnel.api_password),
+            access_token=tunnel.jwt,
         )
         data = {}
         if "cpu_pct" in [*json]:
@@ -98,7 +108,7 @@ class Scraper:
             url=basepath + "trades",
             payload={"limit": 500, "offset": offset},
             method="GET",
-            auth=(tunnel.api_username, tunnel.api_password),
+            access_token=tunnel.jwt,
         )
         return json["trades"]
 
@@ -107,6 +117,6 @@ class Scraper:
         headers, json = send_public_request(
             url=basepath + "status",
             method="GET",
-            auth=(tunnel.api_username, tunnel.api_password),
+            access_token=tunnel.jwt,
         )
         return json

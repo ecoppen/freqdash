@@ -22,6 +22,7 @@ class Tunnel:
         self.api_password = instance.api_password
         self.started = False
         self.local_bind_port = None
+        self.jwt = None
 
         if self.ssh_pkey_filename is None:
             self.server = SSHTunnelForwarder(
