@@ -4,7 +4,6 @@ from pathlib import Path
 from typing import Optional
 
 import sqlalchemy as db
-from sqlalchemy import DECIMAL, Column, ForeignKey, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import func
