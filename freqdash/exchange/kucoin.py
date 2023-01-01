@@ -75,7 +75,7 @@ class Kucoin(Exchange):
         if start_time is not None:
             params["startAt"] = start_time
         if end_time is not None:
-            params["endAt"] = end_time
+            params["endAt"] = end_time + 1
 
         header, raw_json = send_public_request(
             url=self.spot_api_url, url_path="/api/v1/market/candles", payload=params
@@ -155,7 +155,7 @@ class Kucoin(Exchange):
         if start_time is not None:
             params["from"] = start_time
         if end_time is not None:
-            params["to"] = end_time
+            params["to"] = end_time + 1
 
         header, raw_json = send_public_request(
             url=self.futures_api_url, url_path="/api/v1/kline/query", payload=params
