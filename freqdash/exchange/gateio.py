@@ -39,7 +39,10 @@ class Gateio(Exchange):
         )
         if len(raw_json) > 0:
             return [
-                {"symbol": pair["currency_pair"], "price": Decimal(pair["last"])}
+                {
+                    "symbol": pair["currency_pair"].replace("_", ""),
+                    "price": Decimal(pair["last"]),
+                }
                 for pair in raw_json
             ]
         return []
