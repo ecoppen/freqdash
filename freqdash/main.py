@@ -3,7 +3,6 @@ import os
 import threading
 import time
 from pathlib import Path
-from typing import Union
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.gzip import GZipMiddleware
@@ -14,7 +13,7 @@ from fastapi.templating import Jinja2Templates
 from freqdash.connection.factory import load_tunnels
 from freqdash.core.config import load_config
 from freqdash.exchange.factory import load_exchanges
-from freqdash.exchange.utils import Exchanges, Intervals, Markets
+from freqdash.exchange.utils import Exchanges, Intervals, Markets, Settle
 from freqdash.models.database import Database
 from freqdash.scraper.scraper import Scraper
 
@@ -96,9 +95,10 @@ def get_kline(
     base: str,
     quote: str,
     interval: Intervals = Intervals.ONE_DAY,
-    start_time: Union[int, None] = None,
-    end_time: Union[int, None] = None,
+    start_time: int | None = None,
+    end_time: int | None = None,
     limit: int = 500,
+    settle: Settle | None = None,
 ):
     if market == Markets.SPOT.value:
         return exchanges[exchange].get_spot_kline(
@@ -117,6 +117,7 @@ def get_kline(
             start_time=start_time,
             end_time=end_time,
             limit=limit,
+            settle=settle,
         )
     else:
         return {"error": "not implemented yet"}
