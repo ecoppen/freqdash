@@ -5,6 +5,7 @@ import requests  # type: ignore
 import responses
 
 from freqdash.exchange.gateio import Gateio
+from freqdash.exchange.utils import Intervals
 
 
 class TestGateioExchange(unittest.TestCase):
@@ -71,6 +72,113 @@ class TestGateioExchange(unittest.TestCase):
         )
         spot_prices = gateio.get_spot_prices()
         assert spot_prices == []
+
+    @responses.activate
+    def test_get_futures_price_invalid(self):
+        gateio = Gateio()
+        responses.get(
+            url=f"{gateio.futures_api_url}api/v4/futures/Settle.USDT/contracts/BTC_USDT",
+            body="{}",
+            status=200,
+            content_type="application/json",
+        )
+        futures_price = gateio.get_futures_price(base="BTC", quote="USDT")
+        assert futures_price == Decimal(-1.0)
+
+    @responses.activate
+    def test_get_futures_prices_invalid(self):
+        gateio = Gateio()
+        responses.get(
+            url=f"{gateio.futures_api_url}/api/v4/futures/Settle.USDT/contracts",
+            body="{}",
+            status=200,
+            content_type="application/json",
+        )
+        futures_prices = gateio.get_futures_prices()
+        assert futures_prices == []
+
+    @responses.activate
+    def test_get_spot_kline_valid(self):
+        gateio = Gateio()
+        responses.get(
+            url=f"{gateio.spot_api_url}/api/v4/spot/candlesticks?currency_pair=BTC_USDT&interval=1d&limit=500&from=1632009600&to=1632182400",
+            body='[["1632009600","40407667.678275267577927032","47236.991","48362.191","46840","48296.999","848.0202116972"],["1632096000","109626902.31531487723364667419","43017.999","47325.991","42487.44","47236.991","2475.9950431578"],["1632182400","116656369.50972645187708055278","40734.169","43630.051","39605.63","43018","2774.4554767767"]]',
+            status=200,
+            content_type="application/json",
+        )
+        spot_kline = gateio.get_spot_kline(
+            base="BTC",
+            quote="USDT",
+            start_time=1632009600,
+            end_time=1632182400,
+            interval=Intervals.ONE_DAY,
+            limit=500,
+        )
+        assert spot_kline == [
+            {
+                "timestamp": 1632009600,
+                "open": Decimal("48296.999"),
+                "high": Decimal("48362.191"),
+                "low": Decimal("46840"),
+                "close": Decimal("47236.991"),
+                "volume": Decimal("40407667.678275267577927032"),
+            },
+            {
+                "timestamp": 1632096000,
+                "open": Decimal("47236.991"),
+                "high": Decimal("47325.991"),
+                "low": Decimal("42487.44"),
+                "close": Decimal("43017.999"),
+                "volume": Decimal("109626902.31531487723364667419"),
+            },
+            {
+                "timestamp": 1632182400,
+                "open": Decimal("43018"),
+                "high": Decimal("43630.051"),
+                "low": Decimal("39605.63"),
+                "close": Decimal("40734.169"),
+                "volume": Decimal("116656369.50972645187708055278"),
+            },
+        ]
+
+    @responses.activate
+    def test_get_futures_kline_invalid(self):
+        gateio = Gateio()
+        responses.get(
+            url=f"{gateio.futures_api_url}/api/v4/futures/Settle.USDT/candlesticks?contract=BTC_USDT&interval=5m&from=1632009600&to=1632182400",
+            body="{}",
+            status=200,
+            content_type="application/json",
+        )
+        spot_kline = gateio.get_futures_kline(
+            base="BTC",
+            quote="USDT",
+            start_time=1632009600,
+            end_time=1632182400,
+            interval=Intervals.ONE_DAY,
+            limit=500,
+        )
+        assert spot_kline == []
+
+    @responses.activate
+    def test_get_futures_kline_settle_None(self):
+        gateio = Gateio()
+        responses.get(
+            url=f"{gateio.futures_api_url}/api/v4/futures/Settle.USDT/candlesticks?contract=BTC_USDT&interval=5m&from=1632009600&to=1632182400",
+            body="{}",
+            status=200,
+            content_type="application/json",
+        )
+        spot_kline = gateio.get_futures_kline(
+            base="BTC",
+            quote="USDT",
+            start_time=1632009600,
+            end_time=1632182400,
+            interval=Intervals.ONE_DAY,
+            limit=500,
+            settle=None,
+        )
+        assert spot_kline == []
 
 
 if __name__ == "__main__":
