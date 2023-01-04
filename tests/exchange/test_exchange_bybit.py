@@ -171,7 +171,7 @@ class TestBybitExchange(unittest.TestCase):
     def test_get_spot_kline_invalid(self):
         bybit = Bybit()
         responses.get(
-            url=f"{bybit.futures_api_url}/spot/v3/public/quote/kline?symbol=BTCUSDT&interval=1d&limit=500&startTime=1632009600000&endTime=1632182400000",
+            url=f"{bybit.spot_api_url}/spot/v3/public/quote/kline?symbol=BTCUSDT&interval=1d&limit=500&startTime=1632009600000&endTime=1632182400000",
             body="{}",
             status=200,
             content_type="application/json",
