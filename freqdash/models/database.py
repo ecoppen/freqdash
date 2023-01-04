@@ -165,7 +165,7 @@ class Database:
         now = datetime.now()
         if result is not None:
             for host in result:
-                difference = now - host[12]
+                difference = now - host[13]
                 hosts[host[8]][host[0]] = {
                     "remote": host[1],
                     "local": host[2],
