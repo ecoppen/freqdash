@@ -119,6 +119,7 @@ class Gateio(Exchange):
             return [
                 {"symbol": pair["name"], "price": Decimal(pair["last_price"])}
                 for pair in raw_json
+                if "name" in pair
             ]
         return []
 
@@ -137,6 +138,7 @@ class Gateio(Exchange):
             "contract": f"{base}_{quote}",
             "interval": interval,
         }
+        log.info(settle)
         if start_time is not None:
             params["from"] = start_time
         if end_time is not None:
@@ -163,5 +165,6 @@ class Gateio(Exchange):
                     "volume": Decimal(candle["v"]),
                 }
                 for candle in raw_json
+                if "t" in candle
             ][:limit]
         return []
