@@ -14,14 +14,7 @@ class Scraper:
         self.database = database
 
     def scrape(self) -> None:
-        try:
-            self.scrape_cycle()
-        except requests.exceptions.Timeout:
-            log.warning("Request timed out")
-        except requests.exceptions.TooManyRedirects:
-            log.warning("Too many redirects")
-        except requests.exceptions.RequestException as e:
-            log.warning(f"Request exception: {e}")
+        self.scrape_cycle()
 
     def scrape_cycle(self) -> None:
         for tunnel in self.tunnels:
@@ -51,6 +44,27 @@ class Scraper:
                 self.database.check_then_add_trades(data=closed_trades, host_id=result)
                 open_trades = self.get_open_trades(tunnel=tunnel)
                 self.database.check_then_add_trades(data=open_trades, host_id=result)
+
+                health = self.get_health(tunnel=tunnel)
+                self.database.add_last_process_ts(data=health, host_id=result)
+                balance = self.get_balance(tunnel=tunnel)
+                self.database.update_starting_capital(
+                    data=balance["starting_capital"], host_id=result
+                )
+                self.database.update_balances(
+                    data=balance["currencies"], host_id=result
+                )
+                logs = self.get_logs(tunnel=tunnel)
+                self.database.update_logs(data=logs, host_id=result)
+                locks = self.get_locks(tunnel=tunnel)
+                log.info(locks)
+                whitelist = self.get_whitelist(tunnel=tunnel)
+                self.database.delete_then_add_baselist(data=whitelist, host_id=result)
+                blacklist = self.get_blacklist(tunnel=tunnel)
+                self.database.delete_then_add_baselist(
+                    data=blacklist, host_id=result, list_type="black"
+                )
+
             tunnel.jwt = None
             tunnel.stop()
 
@@ -61,6 +75,9 @@ class Scraper:
             method="POST",
             auth=(tunnel.api_username, tunnel.api_password),
         )
+        if "access_token" not in json:
+            log.warning("No JWT retrieved")
+            return "no_jwt_retrieved"
         return json["access_token"]
 
     def get_config(self, tunnel) -> dict:
@@ -70,6 +87,7 @@ class Scraper:
             method="GET",
             access_token=tunnel.jwt,
         )
+
         data: dict = {}
         if "version" in [*json]:
             data = {
@@ -120,3 +138,57 @@ class Scraper:
             access_token=tunnel.jwt,
         )
         return json
+
+    def get_balance(self, tunnel):
+        basepath = f"http://{tunnel.remote_host}:{tunnel.local_bind_port}/api/v1/"
+        headers, json = send_public_request(
+            url=basepath + "balance",
+            method="GET",
+            access_token=tunnel.jwt,
+        )
+        return json
+
+    def get_logs(self, tunnel):
+        basepath = f"http://{tunnel.remote_host}:{tunnel.local_bind_port}/api/v1/"
+        headers, json = send_public_request(
+            url=basepath + "logs",
+            method="GET",
+            access_token=tunnel.jwt,
+        )
+        return json["logs"]
+
+    def get_locks(self, tunnel):
+        basepath = f"http://{tunnel.remote_host}:{tunnel.local_bind_port}/api/v1/"
+        headers, json = send_public_request(
+            url=basepath + "locks",
+            method="GET",
+            access_token=tunnel.jwt,
+        )
+        return json["locks"]
+
+    def get_whitelist(self, tunnel):
+        basepath = f"http://{tunnel.remote_host}:{tunnel.local_bind_port}/api/v1/"
+        headers, json = send_public_request(
+            url=basepath + "whitelist",
+            method="GET",
+            access_token=tunnel.jwt,
+        )
+        return json["whitelist"]
+
+    def get_blacklist(self, tunnel):
+        basepath = f"http://{tunnel.remote_host}:{tunnel.local_bind_port}/api/v1/"
+        headers, json = send_public_request(
+            url=basepath + "blacklist",
+            method="GET",
+            access_token=tunnel.jwt,
+        )
+        return json["blacklist"]
+
+    def get_health(self, tunnel):
+        basepath = f"http://{tunnel.remote_host}:{tunnel.local_bind_port}/api/v1/"
+        headers, json = send_public_request(
+            url=basepath + "health",
+            method="GET",
+            access_token=tunnel.jwt,
+        )
+        return json["last_process_ts"]

@@ -38,6 +38,7 @@ class Database:
             run_mode = db.Column(db.String)
             ft_version = db.Column(db.String)
             strategy_version = db.Column(db.String)
+            starting_capital = db.Column(db.Numeric, nullable=True)
             added = db.Column(db.DateTime, default=datetime.now)
             last_checked = db.Column(
                 db.DateTime, default=datetime.now, onupdate=datetime.now
@@ -50,7 +51,33 @@ class Database:
             host_id = db.Column(db.Integer)
             cpu_pct = db.Column(db.Numeric)
             ram_pct = db.Column(db.Numeric)
+            last_process_ts = db.Column(db.Numeric, nullable=True)
             added = db.Column(db.DateTime, default=datetime.now)
+
+        class balances(self.Base):  # type: ignore
+            __tablename__ = "balances"
+
+            host_id = db.Column(db.Integer, primary_key=True)
+            currency = db.Column(db.String, primary_key=True)
+            free = db.Column(db.Numeric)
+            balance = db.Column(db.Numeric)
+
+        class base_lists(self.Base):  # type: ignore
+            __tablename__ = "base_lists"
+
+            host_id = db.Column(db.Integer, primary_key=True)
+            quote = db.Column(db.String, primary_key=True)
+            list_type = db.Column(db.Integer, primary_key=True)
+
+        class logs(self.Base):  # type: ignore
+            __tablename__ = "logs"
+
+            id = db.Column(db.Integer, primary_key=True)
+            host_id = db.Column(db.Integer)
+            timestamp = db.Column(db.Integer)
+            name = db.Column(db.String)
+            level = db.Column(db.String)
+            message = db.Column(db.String)
 
         class Prices(self.Base):  # type: ignore
             __tablename__ = "prices"
@@ -149,7 +176,8 @@ class Database:
                     "trading_mode": host[7].upper(),
                     "ft_version": host[9],
                     "strategy_version": host[10],
-                    "last_checked": host[12].strftime("%Y-%m-%d %H:%M:%S"),
+                    "starting_capital": host[11],
+                    "last_checked": host[13].strftime("%Y-%m-%d %H:%M:%S"),
                     "alert": difference.total_seconds() > 600,
                 }
                 if index:
@@ -261,7 +289,7 @@ class Database:
         check = (
             self.session.query(table_object)
             .filter_by(exchange=exchange, trading_mode=market)
-            .all()
+            .first()
         )
 
         if check is not None:
@@ -385,6 +413,109 @@ class Database:
             f"Adding sysinfo. Host_id: {data['host_id']} CPU: {data['cpu_pct']} RAM: {data['ram_pct']}"
         )
         self.engine.execute(table_object.insert().values(data))
+
+    def add_last_process_ts(self, data: int, host_id: int):
+        table_object = self.get_table_object(table_name="sysinfo")
+        result = (
+            self.session.query(table_object)
+            .filter_by(host_id=host_id)
+            .order_by(table_object.c.id.desc())
+            .first()
+        )
+        if result is not None:
+            self.session.query(table_object).filter_by(
+                host_id=host_id, id=result[0]
+            ).update({"last_process_ts": data})
+
+            self.session.commit()
+            self.session.flush()
+
+    def delete_then_add_baselist(
+        self, data: list, host_id: int, list_type: str = "white"
+    ):
+        table_object = self.get_table_object(table_name="base_lists")
+
+        check = (
+            self.session.query(table_object)
+            .filter_by(host_id=host_id, list_type=list_type)
+            .first()
+        )
+
+        if check is not None:
+            if len(check) > 0:
+                log.info(f"{list_type}list data found for host {host_id} - deleting")
+                self.session.query(table_object).filter_by(
+                    host_id=host_id, list_type=list_type
+                ).delete()
+                self.session.commit()
+                self.session.flush()
+        formatted_data: list = []
+        log.info(data)
+        for item in data:
+            quote = item.split("/")[0]
+            formatted_data.append(
+                {"host_id": host_id, "quote": quote, "list_type": list_type}
+            )
+        if len(formatted_data) > 0:
+            self.engine.execute(table_object.insert().values(formatted_data))
+            log.info(f"{list_type}list data updated for host {host_id}")
+
+    def update_starting_capital(self, data: float, host_id: int):
+        table_object = self.get_table_object(table_name="hosts")
+        self.session.query(table_object).filter_by(id=host_id).update(
+            {"starting_capital": data}
+        )
+        self.session.commit()
+        self.session.flush()
+
+    def update_balances(self, data: list, host_id: int):
+        table_object = self.get_table_object(table_name="balances")
+        table_keys = table_object.columns.keys()
+        check = self.session.query(table_object).filter_by(host_id=host_id).first()
+
+        if check is not None:
+            if len(check) > 0:
+                log.info(f"balances found for host {host_id} - deleting")
+                self.session.query(table_object).filter_by(host_id=host_id).delete()
+                self.session.commit()
+                self.session.flush()
+        for balance in data:
+            adjusted_balance = {}
+            balance["host_id"] = host_id
+            for key in table_keys:
+                adjusted_balance[key] = balance[key]
+            self.engine.execute(table_object.insert().values(adjusted_balance))
+
+    def update_logs(self, data: list, host_id: int):
+        table_object = self.get_table_object(table_name="logs")
+
+        result = (
+            self.session.query(table_object)
+            .filter_by(host_id=host_id)
+            .order_by(table_object.c.id.desc())
+            .first()
+        )
+
+        timestamp = 0
+        if result is not None:
+            if len(result) > 0:
+                timestamp = result[2]
+
+        logs = []
+        for log_item in data:
+            ts = int(log_item[1])
+            if ts > timestamp:
+                log_data = {
+                    "host_id": host_id,
+                    "timestamp": ts,
+                    "name": log_item[2],
+                    "level": log_item[3],
+                    "message": log_item[4],
+                }
+                logs.append(log_data)
+
+        if len(logs) > 0:
+            self.engine.execute(table_object.insert().values(logs))
 
     def get_oldest_open_trade_id(self, host_id: int):
         table_object = self.get_table_object(table_name="trades")
