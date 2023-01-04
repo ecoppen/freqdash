@@ -10,22 +10,22 @@ log = logging.getLogger(__name__)
 
 class Tunnel:
     def __init__(self, instance: RemoteFreqtradeAPI, ssh_keys_folder: Path) -> None:
-        self.ssh_host = str(instance.ssh_host)
-        self.ssh_port = instance.ssh_port
-        self.ssh_address = f"{self.ssh_host}:{self.ssh_port}"
-        self.ssh_username = instance.ssh_username
-        self.ssh_pkey_filename = instance.ssh_pkey_filename
-        self.ssh_password = instance.ssh_password
-        self.remote_host = str(instance.remote_host)
-        self.remote_port = instance.remote_port
-        self.api_username = instance.api_username
-        self.api_password = instance.api_password
-        self.started = False
-        self.local_bind_port = None
-        self.jwt = None
+        self.ssh_host: str = str(instance.ssh_host)
+        self.ssh_port: int = instance.ssh_port
+        self.ssh_address: str = f"{self.ssh_host}:{self.ssh_port}"
+        self.ssh_username: str | None = instance.ssh_username
+        self.ssh_pkey_filename: str | None = instance.ssh_pkey_filename
+        self.ssh_password: str = instance.ssh_password
+        self.remote_host: str = str(instance.remote_host)
+        self.remote_port: int = instance.remote_port
+        self.api_username: str = instance.api_username
+        self.api_password: str = instance.api_password
+        self.started: bool = False
+        self.local_bind_port: str | None = None
+        self.jwt: str | None = None
 
         if self.ssh_pkey_filename is None:
-            self.server = SSHTunnelForwarder(
+            self.server: SSHTunnelForwarder = SSHTunnelForwarder(
                 (self.ssh_host, self.ssh_port),
                 ssh_username=self.ssh_username,
                 ssh_password=self.ssh_password,
