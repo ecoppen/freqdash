@@ -34,12 +34,13 @@
                           <th scope="col">Stake</th>
                           <th scope="col">Mode</th>
                           <th scope="col">Status</th>
-                          <th scope="col">Closed trades</th>
-                          <th scope="col">Won</th>
-                          <th scope="col">Lost</th>
-                          <th scope="col">Closed profit</th>
-                          <th scope="col">Open trades</th>
-                          <th scope="col">Open profit</th>
+                          <th scope="col">SC</th>
+                          <th scope="col">CT</th>
+                          <th scope="col">W</th>
+                          <th scope="col">L</th>
+                          <th scope="col">CP</th>
+                          <th scope="col">OT</th>
+                          <th scope="col">OP</th>
                           <th scope="col">Updated</th>
                         </tr>
                       </thead>
@@ -54,6 +55,7 @@
                           <td>{{value["stake"]}}</td>
                           <td>{{value["trading_mode"]}}</td>
                           <td>{{value["status"]}}</td>
+                          <td>{{"%.6g"|format(value["starting_capital"])}}</td>
                           <td>{{value["closed_trades"]}}</td>
                           <td>{{value["winning_trades"]}}</td>
                           <td>{{value["losing_trades"]}}</td>
@@ -100,12 +102,13 @@
                           <th scope="col">Stake</th>
                           <th scope="col">Mode</th>
                           <th scope="col">Status</th>
-                          <th scope="col">Closed trades</th>
-                          <th scope="col">Won</th>
-                          <th scope="col">Lost</th>
-                          <th scope="col">Closed profit</th>
-                          <th scope="col">Open trades</th>
-                          <th scope="col">Open profit</th>
+                          <th scope="col">SC</th>
+                          <th scope="col">CT</th>
+                          <th scope="col">W</th>
+                          <th scope="col">L</th>
+                          <th scope="col">CP</th>
+                          <th scope="col">OT</th>
+                          <th scope="col">OP</th>
                           <th scope="col">Updated</th>
                         </tr>
                       </thead>
@@ -120,6 +123,7 @@
                           <td>{{value["stake"]}}</td>
                           <td>{{value["trading_mode"]}}</td>
                           <td>{{value["status"]}}</td>
+                          <td>{{"%.6g"|format(value["starting_capital"])}}</td>
                           <td>{{value["closed_trades"]}}</td>
                           <td>{{value["winning_trades"]}}</td>
                           <td>{{value["losing_trades"]}}</td>
@@ -171,7 +175,7 @@
                             <tr class="table-danger">
                           {% endif %}
                           <th scope="row">{{trade[0]}}</th>
-                          <td>{{trade[2]}}</td>
+                          <td><a style="text-decoration: none;color: inherit;" target="_blank" href="{{trade[27]}}">{{trade[2]}} <i class="fa-solid fa-arrow-up-right-from-square"></i></a></td>
                           <td>{{"%.3g"|format(trade[16])}}</td>
                           <td>{{"%.3g"|format(trade[25])}}</td>
                           <td>{{"%.2f"|format(trade[26])}}</td>
@@ -206,7 +210,7 @@
                             <tr class="table-danger">
                           {% endif %}
                           <th scope="row">{{trade[0]}}</th>
-                          <td>{{trade[2]}}</td>
+                          <td><a style="text-decoration: none;color: inherit;" target="_blank" href="{{trade[25]}}">{{trade[2]}} <i class="fa-solid fa-arrow-up-right-from-square"></i></a></td>
                           <td>{{"%.2f"|format(trade[9])}}</td>
                           <td>{{trade[17]}}</td>
                         </tr>

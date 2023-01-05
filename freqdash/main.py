@@ -50,9 +50,16 @@ exchanges = load_exchanges()
 
 @app.get("/", response_class=HTMLResponse)
 def read_root(request: Request):
-    data: dict = {"page": "index", "instances": {}}
-
-    data["instances"] = database.get_all_hosts(index=True)
+    data: dict = {"page": "index", "instances": database.get_all_hosts(index=True)}
+    without_links = [data["instances"]["open"], data["instances"]["recent"]]
+    for data_structure in without_links:
+        for trade in data_structure:
+            if trade[23] == "SPOT":
+                link = exchanges[trade[5]].spot_trade_url
+            else:
+                link = exchanges[trade[5]].futures_trade_url
+            link = link.replace("BASE", trade[3]).replace("QUOTE", trade[4])
+            trade += [link]
     return templates.TemplateResponse("index.html", {"request": request, "data": data})
 
 
@@ -126,7 +133,7 @@ def get_kline(
 def _auto_scrape():
     while True:
         log.info("Auto scrape routines starting")
-        scraper.scrape()
+        # scraper.scrape()
         all_hosts_and_modes = database.get_hosts_and_modes()
         for exchange in all_hosts_and_modes:
             for mode in all_hosts_and_modes[exchange]:
