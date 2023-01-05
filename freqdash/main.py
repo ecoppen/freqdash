@@ -133,7 +133,7 @@ def get_kline(
 def _auto_scrape():
     while True:
         log.info("Auto scrape routines starting")
-        # scraper.scrape()
+        scraper.scrape()
         all_hosts_and_modes = database.get_hosts_and_modes()
         for exchange in all_hosts_and_modes:
             for mode in all_hosts_and_modes[exchange]:
