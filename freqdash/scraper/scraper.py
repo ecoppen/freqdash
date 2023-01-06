@@ -32,10 +32,7 @@ class Scraper:
                 last_open_trade_id = self.database.get_oldest_open_trade_id(
                     host_id=result
                 )
-                if last_open_trade_id > 20:
-                    last_open_trade_id -= 20
-                else:
-                    last_open_trade_id //= 2
+                last_open_trade_id //= 2
                 log.info(f"last open trade id = {last_open_trade_id}")
                 closed_trades = self.get_closed_trades(
                     tunnel=tunnel, offset=last_open_trade_id
