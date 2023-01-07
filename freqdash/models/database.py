@@ -171,7 +171,7 @@ class Database:
                     "local": host[2],
                     "exchange": host[3],
                     "strategy": host[4],
-                    "status": host[5],
+                    "status": host[5].title(),
                     "stake": host[6],
                     "trading_mode": host[7].upper(),
                     "ft_version": host[9],
@@ -182,10 +182,10 @@ class Database:
                 }
                 if index:
                     hosts[host[8]][host[0]]["closed_trades"] = self.get_trades_count(
-                        host_id=host[0], is_open=False
+                        host_id=host[0], is_open=False, quote_currency=host[6]
                     )
                     hosts[host[8]][host[0]]["winning_trades"] = self.get_trades_count(
-                        host_id=host[0], is_open=False, won=True
+                        host_id=host[0], is_open=False, quote_currency=host[6], won=True
                     )
                     hosts[host[8]][host[0]]["losing_trades"] = (
                         hosts[host[8]][host[0]]["closed_trades"]
@@ -195,11 +195,16 @@ class Database:
                         host_id=host[0], is_open=False, quote_currency=host[6]
                     )
                     hosts[host[8]][host[0]]["open_trades"] = self.get_trades_count(
-                        host_id=host[0], is_open=True
+                        host_id=host[0], is_open=True, quote_currency=host[6]
                     )
                     hosts[host[8]][host[0]]["open_profit"] = self.get_trade_profit(
                         host_id=host[0], is_open=True, quote_currency=host[6]
                     )
+
+                    hosts[host[8]][host[0]]["profit_factor"] = self.get_profit_factor(
+                        host_id=host[0], is_open=False, quote_currency=host[6]
+                    )
+
                     closed_trades = self.get_trades(
                         host_id=host[0], is_open=False, limit=10, sort=True
                     )
@@ -209,7 +214,7 @@ class Database:
                     )
                     hosts["open"] += [list(trade) for trade in open_trades]
 
-            hosts["recent"].sort(key=lambda x: x[16], reverse=True)
+            hosts["recent"].sort(key=lambda x: x[17], reverse=True)
             hosts["recent"] = hosts["recent"][:10]
             for trade in hosts["recent"]:
                 trade[17] = datetime.utcfromtimestamp(trade[17] / 1000.0).strftime(
@@ -232,6 +237,18 @@ class Database:
                     ]
                 else:
                     trade += [None, None]
+
+                orders = self.get_orders_for_trade(
+                    host_id=trade[0], trade_id=trade[1], is_open=False
+                )
+                buy, sell = 0, 0
+                for order in orders:
+                    if order[5] == "buy":
+                        buy += 1
+                    else:
+                        sell += 1
+                trade += [buy, sell]
+                log.info(trade)
 
         return hosts
 
@@ -264,7 +281,6 @@ class Database:
                 host=data["host"], remote_host=data["remote_host"]
             ).update(data)
             self.session.commit()
-            self.session.flush()
             log.info(
                 f"Host updated. Host: {data['host']} Remote host: {data['remote_host']}"
             )
@@ -299,7 +315,6 @@ class Database:
                     exchange=exchange, trading_mode=market
                 ).delete()
                 self.session.commit()
-                self.session.flush()
         for item in data:
             item["exchange"] = exchange
             item["trading_mode"] = market
@@ -333,7 +348,11 @@ class Database:
         return trades
 
     def get_trades_count(
-        self, host_id: int, is_open: bool = True, won: bool | None = None
+        self,
+        host_id: int,
+        quote_currency: str,
+        is_open: bool = True,
+        won: bool | None = None,
     ) -> int:
         table_object = self.get_table_object(table_name="trades")
         int_is_open: int = 1 if is_open else 0
@@ -343,6 +362,7 @@ class Database:
                 filters.append(table_object.c.profit_abs >= 0)
             else:
                 filters.append(table_object.c.profit_abs < 0)
+        filters.append(table_object.c.quote_currency == quote_currency)
         filters.append(table_object.c.host_id == host_id)
         filters.append(table_object.c.is_open == int_is_open)
         return (
@@ -370,22 +390,58 @@ class Database:
         else:
             return round(result, 2)
 
-    def get_closed_orders_for_trade(self, trade_id):
+    def get_orders_for_trade(self, host_id: int, trade_id: int, is_open: bool = False):
         table_object = self.get_table_object(table_name="orders")
+        filters = []
+        if is_open:
+            filters.append(table_object.c.status == "open")
+        else:
+            filters.append(table_object.c.status == "closed")
+        filters.append(table_object.c.host_id == host_id)
+        filters.append(table_object.c.trade_id == trade_id)
 
-        return (
-            self.session.query(table_object)
-            .filter_by(ft_trade_id=trade_id, status="closed")
-            .all()
-        )
+        return self.session.query(table_object).filter(*filters).all()
 
     def get_closed_profit(self):
         table_object = self.get_table_object(table_name="trades")
-        result = self.session.query(func.sum(table_object.c.close_profit_abs)).scalar()
+        result = self.session.query(func.sum(table_object.c.profit_abs)).scalar()
         if result is None:
             return 0.0
         else:
             return result
+
+    def get_profit_factor(
+        self, host_id: int, quote_currency: str, is_open: bool = False
+    ) -> float:
+        table_object = self.get_table_object(table_name="trades")
+
+        filters = []
+        if is_open:
+            filters.append(table_object.c.is_open == 1)
+        else:
+            filters.append(table_object.c.is_open == 0)
+
+        filters.append(table_object.c.host_id == host_id)
+        filters.append(table_object.c.quote_currency == quote_currency)
+        filters.append(table_object.c.profit_abs >= 0)
+
+        total_profit = (
+            self.session.query(func.sum(table_object.c.profit_abs))
+            .filter(*filters)
+            .scalar()
+        )
+        del filters[-1]
+        filters.append(table_object.c.profit_abs < 0)
+        total_loss = (
+            self.session.query(func.sum(table_object.c.profit_abs))
+            .filter(*filters)
+            .scalar()
+        )
+        if total_profit is None:
+            return 0.0
+        if total_loss is None:
+            return float("inf")
+        return round(total_profit / abs(total_loss), 2)
 
     def get_closed_profit_between_dates(
         self, start_datetime: Optional[str], end_datetime: Optional[str]
@@ -398,7 +454,7 @@ class Database:
         if end_datetime is not None:
             filters.append(table_object.c.close_date <= end_datetime)
         result = (
-            self.session.query(func.sum(table_object.c.close_profit_abs))
+            self.session.query(func.sum(table_object.c.profit_abs))
             .filter(*filters)
             .scalar()
         )
@@ -428,7 +484,6 @@ class Database:
             ).update({"last_process_ts": data})
 
             self.session.commit()
-            self.session.flush()
 
     def delete_then_add_baselist(
         self, data: list, host_id: int, list_type: str = "white"
@@ -448,7 +503,7 @@ class Database:
                     host_id=host_id, list_type=list_type
                 ).delete()
                 self.session.commit()
-                self.session.flush()
+
         formatted_data: list = []
         log.info(data)
         for item in data:
@@ -466,7 +521,6 @@ class Database:
             {"starting_capital": data}
         )
         self.session.commit()
-        self.session.flush()
 
     def update_balances(self, data: list, host_id: int):
         table_object = self.get_table_object(table_name="balances")
@@ -478,7 +532,6 @@ class Database:
                 log.info(f"balances found for host {host_id} - deleting")
                 self.session.query(table_object).filter_by(host_id=host_id).delete()
                 self.session.commit()
-                self.session.flush()
         for balance in data:
             adjusted_balance = {}
             balance["host_id"] = host_id
@@ -563,7 +616,7 @@ class Database:
                 self.session.query(table_object).filter_by(
                     host_id=host_id, trade_id=trade["trade_id"]
                 ).update(adjusted_trade)
-
+                self.session.commit()
             self.check_then_update_or_add_orders(
                 data=trade["orders"], host_id=host_id, trade_id=trade["trade_id"]
             )
@@ -595,6 +648,4 @@ class Database:
                 self.session.query(table_object).filter_by(
                     host_id=host_id, trade_id=trade_id, order_id=order["order_id"]
                 ).update(adjusted_order)
-
-        self.session.commit()
-        self.session.flush()
+                self.session.commit()
