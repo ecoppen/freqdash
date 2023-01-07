@@ -20,7 +20,7 @@
                         {% if value["alert"] %}
                         <i class="fa-solid fa-triangle-exclamation text-warning" data-bs-toggle="tooltip" data-bs-title="Last update > 10mins"></i>
                         {% endif %}
-                        {% if value["status"] == "running" %}
+                        {% if value["status"] == "Running" %}
                             {% if value["trading_mode"] == "SPOT" %}
                                 <i class="fa-solid fa-circle text-success" data-bs-toggle="tooltip" data-bs-title="Spot - Running"></i>
                             {% else %}
@@ -49,7 +49,7 @@
             <li class="nav-item">
                 <a class="nav-link" href="#">
                     <span data-feather="file-text" class="align-text-bottom">
-                        {% if value["status"] == "running" %}
+                        {% if value["status"] == "Running" %}
                             {% if value["trading_mode"] == "SPOT" %}
                                 <i class="fa-solid fa-circle text-success"></i>
                             {% else %}
