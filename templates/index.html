@@ -3,6 +3,7 @@
 {% block title %}{% endblock %}
 
 {% block header %}
+<meta http-equiv="refresh" content="60">
 {% endblock %}
 
 {% block page_content %}
@@ -14,7 +15,7 @@
         <div class="col-lg-8">
             {% if data["instances"]["live"]|length == 0 and data["instances"]["dry"]|length == 0 %}
             <div class="alert alert-info" role="alert">
-              Add a FT instance to config.json to get started.
+                Add a FT instance to config.json to get started.
             </div>
             {% endif %}
             {% if data["instances"]["live"]|length > 0 %}
@@ -23,127 +24,135 @@
                     Live instances
                 </div>
                 <div class="card-body">
-                    <table class="table table-sm table-bordered">
-                      <thead>
+                    <table class="table table-sm table-bordered text-center">
+                        <thead>
                         <tr>
-                          <th scope="col">#</th>
-                          <th scope="col">Strategy</th>
-                          <th scope="col">Version</th>
-                          <th scope="col">Exchange</th>
-                          <th scope="col">FT</th>
-                          <th scope="col">Stake</th>
-                          <th scope="col">Mode</th>
-                          <th scope="col">Status</th>
-                          <th scope="col">SC</th>
-                          <th scope="col">CT</th>
-                          <th scope="col">W</th>
-                          <th scope="col">L</th>
-                          <th scope="col">CP</th>
-                          <th scope="col">OT</th>
-                          <th scope="col">OP</th>
-                          <th scope="col">Updated</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Instance number">#</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Strategy name">Strategy</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Strategy version" >V</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Exchange name">Exchange</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Freqtrade version">FT</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Currency used for staking">Stake</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Trading mode e.g. spot/futures">Mode</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Current bot status">Status</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Starting capital">SC</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Number of Closed Trades">CT</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Profit Factor">PF</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Trades Won">W</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Trades Lost">L</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Closed Profit">CP</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Open Trades">OT</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Open profit">OP</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Last updated by freqdash">Updated</th>
                         </tr>
-                      </thead>
-                      <tbody>
-                      {% for key, value in data["instances"]["live"].items() %}
+                        </thead>
+                        <tbody>
+                        {% for key, value in data["instances"]["live"].items() %}
                         <tr>
-                          <th scope="row">{{key}}</th>
-                          <td>{{value["strategy"]}}</td>
-                          <td>{{value["strategy_version"]}}</td>
-                          <td>{{value["exchange"]}}</td>
-                          <td>{{value["ft_version"]}}</td>
-                          <td>{{value["stake"]}}</td>
-                          <td>{{value["trading_mode"]}}</td>
-                          <td>{{value["status"]}}</td>
-                          <td>{{"%.6g"|format(value["starting_capital"])}}</td>
-                          <td>{{value["closed_trades"]}}</td>
-                          <td>{{value["winning_trades"]}}</td>
-                          <td>{{value["losing_trades"]}}</td>
+                            <th scope="row">{{key}}</th>
+                            <td>{{value["strategy"]}}</td>
+                            <td>{{value["strategy_version"]}}</td>
+                            <td>{{value["exchange"]}}</td>
+                            <td>{{value["ft_version"]}}</td>
+                            <td>{{value["stake"]}}</td>
+                            <td>{{value["trading_mode"]}}</td>
+                            <td>{{value["status"]}}</td>
+                            <td>{{"%.6g"|format(value["starting_capital"])}}</td>
+                            <td>{{value["closed_trades"]}}</td>
+                            <td>{{value["profit_factor"]}}</td>
+                            <td>{{value["winning_trades"]}}</td>
+                            <td>{{value["losing_trades"]}}</td>
                             {% if value["closed_profit"] >= 0 %}
-                          <td class="table-success">
-                              {% else %}
+                            <td class="table-success">
+                                {% else %}
                             <td class="table-danger">
-                          {% endif %}
-                              {{value["closed_profit"]}}</td>
-                          <td>{{value["open_trades"]}}</td>
-                          {% if value["open_profit"] >= 0 %}
-                          <td class="table-success">
-                              {% else %}
+                                {% endif %}
+                                {{value["closed_profit"]}}
+                            </td>
+                            <td>{{value["open_trades"]}}</td>
+                            {% if value["open_profit"] >= 0 %}
+                            <td class="table-success">
+                                {% else %}
                             <td class="table-danger">
-                          {% endif %}
-                              {{value["open_profit"]}}</td>
-                          <td>{{value["last_checked"]}}</td>
+                                {% endif %}
+                                {{value["open_profit"]}}
+                            </td>
+                            <td>{{value["last_checked"]}}</td>
 
-                        </td>
-                      {% endfor %}
-                      </tbody>
+                            </td>
+                            {% endfor %}
+                        </tbody>
                     </table>
                 </div>
             </div>
             {% endif %}
 
             {% if data["instances"]["dry"]|length > 0 %}
-                {% if data["instances"]["dry"]|length > 0 %}
-                    <br>
-                {% endif %}
+            {% if data["instances"]["dry"]|length > 0 %}
+            <br>
+            {% endif %}
             <div class="card">
                 <div class="card-header">
                     Dry instances
                 </div>
                 <div class="card-body">
-                    <table class="table table-sm table-bordered">
-                      <thead>
+                    <table class="table table-sm table-bordered text-center">
+                        <thead>
                         <tr>
-                          <th scope="col">#</th>
-                          <th scope="col">Strategy</th>
-                          <th scope="col">Version</th>
-                          <th scope="col">Exchange</th>
-                          <th scope="col">FT</th>
-                          <th scope="col">Stake</th>
-                          <th scope="col">Mode</th>
-                          <th scope="col">Status</th>
-                          <th scope="col">SC</th>
-                          <th scope="col">CT</th>
-                          <th scope="col">W</th>
-                          <th scope="col">L</th>
-                          <th scope="col">CP</th>
-                          <th scope="col">OT</th>
-                          <th scope="col">OP</th>
-                          <th scope="col">Updated</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Instance number">#</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Strategy name">Strategy</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Strategy version" >V</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Exchange name">Exchange</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Freqtrade version">FT</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Currency used for staking">Stake</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Trading mode e.g. spot/futures">Mode</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Current bot status">Status</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Starting capital">SC</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Number of Closed Trades">CT</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Profit Factor">PF</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Trades Won">W</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Trades Lost">L</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Closed Profit">CP</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Open Trades">OT</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Open profit">OP</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Last updated by freqdash">Updated</th>
                         </tr>
-                      </thead>
-                      <tbody>
-                      {% for key, value in data["instances"]["dry"].items() %}
+                        </thead>
+                        <tbody>
+                        {% for key, value in data["instances"]["dry"].items() %}
                         <tr>
-                          <th scope="row">{{key}}</th>
-                          <td>{{value["strategy"]}}</td>
-                          <td>{{value["strategy_version"]}}</td>
-                          <td>{{value["exchange"]}}</td>
-                          <td>{{value["ft_version"]}}</td>
-                          <td>{{value["stake"]}}</td>
-                          <td>{{value["trading_mode"]}}</td>
-                          <td>{{value["status"]}}</td>
-                          <td>{{"%.6g"|format(value["starting_capital"])}}</td>
-                          <td>{{value["closed_trades"]}}</td>
-                          <td>{{value["winning_trades"]}}</td>
-                          <td>{{value["losing_trades"]}}</td>
-                         {% if value["closed_profit"] >= 0 %}
-                          <td class="table-success">
-                              {% else %}
+                            <th scope="row">{{key}}</th>
+                            <td>{{value["strategy"]}}</td>
+                            <td>{{value["strategy_version"]}}</td>
+                            <td>{{value["exchange"]}}</td>
+                            <td>{{value["ft_version"]}}</td>
+                            <td>{{value["stake"]}}</td>
+                            <td>{{value["trading_mode"]}}</td>
+                            <td>{{value["status"]}}</td>
+                            <td>{{"%.6g"|format(value["starting_capital"])}}</td>
+                            <td>{{value["closed_trades"]}}</td>
+                            <td>{{value["profit_factor"]}}</td>
+                            <td>{{value["winning_trades"]}}</td>
+                            <td>{{value["losing_trades"]}}</td>
+                            {% if value["closed_profit"] >= 0 %}
+                            <td class="table-success">
+                                {% else %}
                             <td class="table-danger">
-                          {% endif %}
-                              {{value["closed_profit"]}}</td>
-                          <td>{{value["open_trades"]}}</td>
-                          {% if value["open_profit"] >= 0 %}
-                          <td class="table-success">
-                              {% else %}
+                                {% endif %}
+                                {{value["closed_profit"]}}
+                            </td>
+                            <td>{{value["open_trades"]}}</td>
+                            {% if value["open_profit"] >= 0 %}
+                            <td class="table-success">
+                                {% else %}
                             <td class="table-danger">
-                          {% endif %}{{value["open_profit"]}}</td>
-                          <td>{{value["last_checked"]}}</td>
+                                {% endif %}{{value["open_profit"]}}
+                            </td>
+                            <td>{{value["last_checked"]}}</td>
 
                         </tr>
-                      {% endfor %}
-                      </tbody>
+                        {% endfor %}
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -155,35 +164,40 @@
                     Open trades
                 </div>
                 <div class="card-body">
-                    <table class="table table-sm table-bordered">
-                      <thead>
+                    <table class="table table-sm table-bordered text-center">
+                        <thead>
                         <tr>
-                          <th scope="col">#</th>
-                          <th scope="col">Pair</th>
-                          <th scope="col">OR</th>
-                          <th scope="col">CR</th>
-                          <th scope="col">%</th>
-                          <th scope="col">Profit</th>
-                          <th scope="col">Open</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Instance number">#</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Pairing base/quote">Pair</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Number of entries">B</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Number of exits">S</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Open Rate">OR</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Current Rate">CR</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Current profit percentage">%</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Current profit absolute">Profit</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Open Timestamp">Open</th>
                         </tr>
-                      </thead>
-                      <tbody>
-                      {% for trade in data["instances"]["open"] %}
+                        </thead>
+                        <tbody>
+                        {% for trade in data["instances"]["open"] %}
                         {% if trade[9] >= 0 %}
                         <tr class="table-success">
                             {% else %}
-                            <tr class="table-danger">
-                          {% endif %}
-                          <th scope="row">{{trade[0]}}</th>
-                          <td><a style="text-decoration: none;color: inherit;" target="_blank" href="{{trade[27]}}">{{trade[2]}} <i class="fa-solid fa-arrow-up-right-from-square"></i></a></td>
-                          <td>{{"%.3g"|format(trade[16])}}</td>
-                          <td>{{"%.3g"|format(trade[25])}}</td>
-                          <td>{{"%.2f"|format(trade[26])}}</td>
-                          <td>{{"%.2f"|format(trade[9])}}</td>
-                          <td>{{trade[15]}}</td>
+                        <tr class="table-danger">
+                            {% endif %}
+                            <th scope="row">{{trade[0]}}</th>
+                            <td><a style="text-decoration: none;color: inherit;" target="_blank" href="{{trade[27]}}">{{trade[2]}}
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i></a></td>
+                            <td>{{"%.3g"|format(trade[27])}}</td>
+                            <td>{{"%.3g"|format(trade[28])}}</td>
+                            <td>{{"%.3g"|format(trade[16])}}</td>
+                            <td>{{"%.3g"|format(trade[25])}}</td>
+                            <td>{{"%.2f"|format(trade[26])}}</td>
+                            <td>{{"%.2f"|format(trade[9])}}</td>
+                            <td>{{trade[15]}}</td>
                         </tr>
-                      {% endfor %}
-                      </tbody>
+                        {% endfor %}
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -193,29 +207,30 @@
                     Recent trades
                 </div>
                 <div class="card-body">
-                    <table class="table table-sm table-bordered">
-                      <thead>
+                    <table class="table table-sm table-bordered text-center">
+                        <thead>
                         <tr>
-                          <th scope="col">#</th>
-                          <th scope="col">Pair</th>
-                          <th scope="col">Profit</th>
-                          <th scope="col">Closed</th>
+                            <th scope="col">#</th>
+                            <th scope="col">Pair</th>
+                            <th scope="col">Profit</th>
+                            <th scope="col">Closed</th>
                         </tr>
-                      </thead>
-                      <tbody>
-                      {% for trade in data["instances"]["recent"] %}
+                        </thead>
+                        <tbody>
+                        {% for trade in data["instances"]["recent"] %}
                         {% if trade[9] >= 0 %}
                         <tr class="table-success">
                             {% else %}
-                            <tr class="table-danger">
-                          {% endif %}
-                          <th scope="row">{{trade[0]}}</th>
-                          <td><a style="text-decoration: none;color: inherit;" target="_blank" href="{{trade[25]}}">{{trade[2]}} <i class="fa-solid fa-arrow-up-right-from-square"></i></a></td>
-                          <td>{{"%.2f"|format(trade[9])}}</td>
-                          <td>{{trade[17]}}</td>
+                        <tr class="table-danger">
+                            {% endif %}
+                            <th scope="row">{{trade[0]}}</th>
+                            <td><a style="text-decoration: none;color: inherit;" target="_blank" href="{{trade[25]}}">{{trade[2]}}
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i></a></td>
+                            <td>{{"%.2f"|format(trade[9])}}</td>
+                            <td>{{trade[17]}}</td>
                         </tr>
-                      {% endfor %}
-                      </tbody>
+                        {% endfor %}
+                        </tbody>
                     </table>
                 </div>
             </div>
