@@ -244,7 +244,7 @@ class TestCoreConfig(unittest.TestCase):
             Config(
                 local_freqtrade_instances=[],
                 remote_freqtrade_instances=None,
-                scrape_interval=299,
+                scrape_interval=59,
                 database_name="freqdash",
             )
 
@@ -252,7 +252,7 @@ class TestCoreConfig(unittest.TestCase):
             Config(
                 local_freqtrade_instances=None,
                 remote_freqtrade_instances=None,
-                scrape_interval=300,
+                scrape_interval=60,
                 database_name="freqdash",
             )
 
