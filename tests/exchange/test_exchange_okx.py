@@ -121,6 +121,69 @@ class TestBybitExchange(unittest.TestCase):
         futures_prices = okx.get_futures_prices()
         assert futures_prices == []
 
+    @responses.activate
+    def test_get_spot_kline_valid(self):
+        okx = Okx()
+        responses.get(
+            url=f"{okx.spot_api_url}/api/v5/market/candles?instId=BTC-USDT&bar=1Dutc&limit=500&before=1632009599999&after=1632182400001",
+            body='{"code":"0","msg":"","data":[["1632182400000","43016.9","43635.5","39566.8","40730.3","28840.93614238","1202901694.1476463","1202901694.1476463","1"],["1632096000000","47244.4","47339.2","42476.2","43020.6","22522.08456534","1000660985.05888933","1000660985.05888933","1"],["1632009600000","48305.4","48372.1","46833.5","47244.4","11320.85422277","540966638.7558204","540966638.7558204","1"]]}',
+            status=200,
+            content_type="application/json",
+        )
+        spot_kline = okx.get_spot_kline(
+            base="BTC",
+            quote="USDT",
+            start_time=1632009600000,
+            end_time=1632182400000,
+            interval=Intervals.ONE_DAY,
+            limit=500,
+        )
+        assert spot_kline == [
+            {
+                "timestamp": 1632182400000,
+                "open": Decimal("43016.9"),
+                "high": Decimal("43635.5"),
+                "low": Decimal("39566.8"),
+                "close": Decimal("40730.3"),
+                "volume": Decimal("28840.93614238"),
+            },
+            {
+                "timestamp": 1632096000000,
+                "open": Decimal("47244.4"),
+                "high": Decimal("47339.2"),
+                "low": Decimal("42476.2"),
+                "close": Decimal("43020.6"),
+                "volume": Decimal("22522.08456534"),
+            },
+            {
+                "timestamp": 1632009600000,
+                "open": Decimal("48305.4"),
+                "high": Decimal("48372.1"),
+                "low": Decimal("46833.5"),
+                "close": Decimal("47244.4"),
+                "volume": Decimal("11320.85422277"),
+            },
+        ]
+
+    @responses.activate
+    def test_get_spot_kline_invalid(self):
+        okx = Okx()
+        responses.get(
+            url=f"{okx.spot_api_url}/api/v5/market/candles?instId=BTC-USDT&bar=1Dutc&limit=500&before=1632009599999&after=1632182400001",
+            body="{}",
+            status=200,
+            content_type="application/json",
+        )
+        spot_kline = okx.get_spot_kline(
+            base="BTC",
+            quote="USDT",
+            start_time=1632009600000,
+            end_time=1632182400000,
+            interval=Intervals.ONE_DAY,
+            limit=500,
+        )
+        assert spot_kline == []
+
 
 if __name__ == "__main__":
     unittest.main()
