@@ -44,8 +44,8 @@ class Config(BaseModel):
 
     @validator("scrape_interval")
     def interval_amount(cls, v):
-        if v < 300:
-            raise ValueError("Scraping interval lower limit is 300 (5 minutes)")
+        if v < 60:
+            raise ValueError("Scraping interval lower limit is 60 (1 minute)")
         return v
 
     @root_validator
