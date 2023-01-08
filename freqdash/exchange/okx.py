@@ -66,8 +66,8 @@ class Okx(Exchange):
             "15m": "15m",
             "1h": "1H",
             "4h": "4H",
-            "1d": "1D",
-            "1w": "1W",
+            "1d": "1Dutc",
+            "1w": "1Wutc",
         }
         params: dict = {
             "instId": f"{base}-{quote}",
@@ -75,9 +75,9 @@ class Okx(Exchange):
             "limit": limit,
         }
         if start_time is not None:
-            params["after"] = start_time
+            params["before"] = start_time - 1
         if end_time is not None:
-            params["before"] = end_time
+            params["after"] = end_time + 1
 
         header, raw_json = send_public_request(
             url=self.spot_api_url, url_path="/api/v5/market/candles", payload=params
