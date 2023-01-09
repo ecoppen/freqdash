@@ -220,6 +220,9 @@ class Database:
                 trade[17] = datetime.utcfromtimestamp(trade[17] / 1000.0).strftime(
                     "%Y-%m-%d %H:%M:%S"
                 )
+                trade[15] = datetime.utcfromtimestamp(trade[15] / 1000.0).strftime(
+                    "%Y-%m-%d %H:%M:%S"
+                )
             hosts["open"].sort(key=lambda x: x[15])
             for trade in hosts["open"]:
                 trade[15] = datetime.utcfromtimestamp(trade[15] / 1000.0).strftime(
@@ -230,6 +233,7 @@ class Database:
                     exchange=trade[5],
                     trading_mode=trade[23],
                 )
+
                 if current_price is not None:
                     trade += [
                         current_price[4],
