@@ -158,7 +158,7 @@
             </div>
             {% endif %}
         </div>
-        <div class="col">
+        <div class="col-lg-4">
             <div class="card">
                 <div class="card-header">
                     Open trades
@@ -169,8 +169,10 @@
                         <tr>
                             <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Instance number">#</th>
                             <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Pairing base/quote">Pair</th>
-                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Number of entries">B</th>
-                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Number of exits">S</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Leverage">L</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Side">S</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Number of entries"><i class="fa-solid fa-chevron-up"></i></th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Number of exits"><i class="fa-solid fa-chevron-down"></i></th>
                             <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Open Rate">OR</th>
                             <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Current Rate">CR</th>
                             <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Current profit percentage">%</th>
@@ -186,8 +188,10 @@
                         <tr class="table-danger">
                             {% endif %}
                             <th scope="row">{{trade[0]}}</th>
-                            <td><a style="text-decoration: none;color: inherit;" target="_blank" href="{{trade[27]}}">{{trade[2]}}
+                            <td><a style="text-decoration: none;color: inherit;" target="_blank" href="{{trade[29]}}">{{trade[2]}}
                                 <i class="fa-solid fa-arrow-up-right-from-square"></i></a></td>
+                            <td>{{"%.3g"|format(trade[21])}}x</td>
+                            <td>{% if trade[22] == 0 %}L{% else %}W{% endif %}</td>
                             <td>{{"%.3g"|format(trade[27])}}</td>
                             <td>{{"%.3g"|format(trade[28])}}</td>
                             <td>{{"%.3g"|format(trade[16])}}</td>
@@ -210,10 +214,15 @@
                     <table class="table table-sm table-bordered text-center">
                         <thead>
                         <tr>
-                            <th scope="col">#</th>
-                            <th scope="col">Pair</th>
-                            <th scope="col">Profit</th>
-                            <th scope="col">Closed</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Instance number">#</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Pairing base/quote">Pair</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Leverage">L</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Side">S</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Open Rate">OR</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Close Rate">CR</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Current profit absolute">Profit</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Open Timestamp">Open</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Close Timestamp">Close</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -226,7 +235,12 @@
                             <th scope="row">{{trade[0]}}</th>
                             <td><a style="text-decoration: none;color: inherit;" target="_blank" href="{{trade[25]}}">{{trade[2]}}
                                 <i class="fa-solid fa-arrow-up-right-from-square"></i></a></td>
+                            <td>{{"%.3g"|format(trade[21])}}x</td>
+                            <td>{% if trade[22] == 0 %}L{% else %}W{% endif %}</td>
+                            <td>{{"%.3g"|format(trade[16])}}</td>
+                            <td>{{"%.3g"|format(trade[18])}}</td>
                             <td>{{"%.2f"|format(trade[9])}}</td>
+                            <td>{{trade[15]}}</td>
                             <td>{{trade[17]}}</td>
                         </tr>
                         {% endfor %}
