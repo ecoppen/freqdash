@@ -37,7 +37,7 @@ class Scraper:
                 closed_trades = self.get_closed_trades(
                     tunnel=tunnel, offset=last_open_trade_id
                 )
-                log.info(closed_trades)
+
                 self.database.check_then_add_trades(data=closed_trades, host_id=result)
                 open_trades = self.get_open_trades(tunnel=tunnel)
                 self.database.check_then_add_trades(data=open_trades, host_id=result)
