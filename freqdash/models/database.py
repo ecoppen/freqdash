@@ -304,6 +304,19 @@ class Database:
         )
         return price
 
+    def get_prices(self, exchange: str, trading_mode: str, quote: str):
+        table_object = self.get_table_object(table_name="prices")
+        all_prices = (
+            self.session.query(table_object)
+            .filter_by(exchange=exchange, trading_mode=trading_mode)
+            .all()
+        )
+        prices = []
+        for symbol in all_prices:
+            if symbol[3].endswith(quote):
+                prices.append(symbol)
+        return prices
+
     def delete_then_update_price(self, exchange: str, market: str, data: dict):
         table_object = self.get_table_object(table_name="prices")
         check = (
@@ -324,6 +337,11 @@ class Database:
             item["trading_mode"] = market
         self.engine.execute(table_object.insert().values(data))
         log.info(f"Price data saved for {exchange}/{market}")
+
+    def get_balances(self, host_id: int):
+        table_object = self.get_table_object(table_name="balances")
+        balances = self.session.query(table_object).filter_by(host_id=host_id).all()
+        return balances
 
     def get_trades(
         self,
