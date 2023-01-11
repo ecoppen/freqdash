@@ -1,9 +1,9 @@
 import logging
 from datetime import datetime
-from pathlib import Path
 from typing import Optional
 
 import sqlalchemy as db
+from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import func
@@ -14,11 +14,18 @@ Base = declarative_base()
 
 
 class Database:
-    def __init__(self, path: Path) -> None:
-        self.engine = db.create_engine(
-            "sqlite:///" + str(path) + "?check_same_thread=false"
-        )
-        log.info(f"Database loaded: {path} ")
+    def __init__(self, config) -> None:
+        if config.engine == "postgres":
+            engine_string = f"{config.username}:{config.password}@{config.host}:{config.port}/{config.name}"
+            self.engine = create_engine("postgresql+psycopg://" + engine_string)
+        elif config.engine == "sqlite":
+            self.engine = create_engine(
+                "sqlite:///" + config.name + ".db?check_same_thread=false"
+            )
+        else:
+            raise Exception(f"{config.engine} setup has not been defined")
+
+        log.info(f"{config.engine} loaded")
 
         self.Session = sessionmaker(bind=self.engine)
         self.session = self.Session()
