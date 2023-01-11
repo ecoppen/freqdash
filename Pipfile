@@ -6,11 +6,11 @@ name = "pypi"
 [packages]
 fastapi = "*"
 jinja2 = "*"
-psycopg2-binary = "*"
+psycopg = {extras = ["binary"], version = "*"}
 pydantic = "*"
 requests = "*"
 sshtunnel = "*"
-sqlalchemy = "*"
+sqlalchemy = "==2.0.0rc2"
 uvicorn = {extras = ["standard"], version = "*"}
 
 [dev-packages]
@@ -26,7 +26,6 @@ pre-commit = "*"
 pytest = "*"
 pytest-cov = "*"
 responses = "*"
-sqlalchemy = {extras = ["mypy"], version = "*"}
 types-freezegun = "*"
 
 [requires]
