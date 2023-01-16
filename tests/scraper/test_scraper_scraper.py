@@ -5,14 +5,17 @@ from unittest.mock import MagicMock, patch
 import requests  # type: ignore
 
 from freqdash.connection.tunnel import Tunnel
+from freqdash.core.config import Database as DBConfig
 from freqdash.core.config import RemoteFreqtradeAPI
 from freqdash.models.database import Database
 from freqdash.scraper.scraper import Scraper
 
 
 class TestScraper(unittest.TestCase):
-    path = Path(":memory:")
-    database = Database(path=path)
+    db = DBConfig(
+        engine="sqlite", username="", password="", host="127.0.0.1", port=5432, name=""
+    )
+    database = Database(config=db)
 
     remote_freqtrade_api = RemoteFreqtradeAPI(
         ssh_host="127.0.0.1",
