@@ -46,7 +46,7 @@ class Database:
         class Hosts(self.Base):  # type: ignore
             __tablename__ = "hosts"
 
-            id: Mapped[int] = mapped_column(primary_key=True)
+            id: Mapped[intpk] = mapped_column(init=False)
             host: Mapped[str]
             remote_host: Mapped[str]
             exchange: Mapped[str]
