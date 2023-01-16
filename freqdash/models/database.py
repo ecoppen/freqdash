@@ -30,9 +30,12 @@ class Database:
             engine_string = f"{config.username}:{config.password}@{config.host}:{config.port}/{config.name}"
             self.engine = create_engine("postgresql+psycopg://" + engine_string)
         elif config.engine == "sqlite":
-            self.engine = create_engine(
-                "sqlite:///" + config.name + ".db?check_same_thread=false"
-            )
+            if config.name == "":
+                self.engine = create_engine("sqlite:///:memory:")
+            else:
+                self.engine = create_engine(
+                    "sqlite:///" + config.name + ".db?check_same_thread=false"
+                )
         else:
             raise Exception(f"{config.engine} setup has not been defined")
 
