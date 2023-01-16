@@ -1,7 +1,5 @@
 import unittest
 
-from pydantic import IPvAnyAddress
-
 from freqdash.core.config import Database as DBConfig
 from freqdash.models.database import Database
 
