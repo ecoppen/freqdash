@@ -1,16 +1,27 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
-import sqlalchemy as db
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import BigInteger, create_engine, delete, insert, select, update
+from sqlalchemy.orm import (  # type: ignore
+    DeclarativeBase,
+    Mapped,
+    MappedAsDataclass,
+    Session,
+    mapped_column,
+)
 from sqlalchemy.sql import func
+from typing_extensions import Annotated
 
 log = logging.getLogger(__name__)
 
-Base = declarative_base()
+
+class Base(MappedAsDataclass, DeclarativeBase):
+    pass
+
+
+intpk = Annotated[int, mapped_column(primary_key=True)]
+strpk = Annotated[str, mapped_column(primary_key=True)]
 
 
 class Database:
@@ -27,127 +38,136 @@ class Database:
 
         log.info(f"{config.engine} loaded")
 
-        self.Session = sessionmaker(bind=self.engine)
-        self.session = self.Session()
-        self.Base = declarative_base()
+        self.Base = Base
 
         class Hosts(self.Base):  # type: ignore
             __tablename__ = "hosts"
 
-            id = db.Column(db.Integer, primary_key=True)
-            host = db.Column(db.String)
-            remote_host = db.Column(db.String)
-            exchange = db.Column(db.String)
-            strategy = db.Column(db.String)
-            state = db.Column(db.String)
-            stake_currency = db.Column(db.String)
-            trading_mode = db.Column(db.String)
-            run_mode = db.Column(db.String)
-            ft_version = db.Column(db.String)
-            strategy_version = db.Column(db.String)
-            starting_capital = db.Column(db.Numeric, nullable=True)
-            added = db.Column(db.DateTime, default=datetime.now)
-            last_checked = db.Column(
-                db.DateTime, default=datetime.now, onupdate=datetime.now
+            id: Mapped[int] = mapped_column(primary_key=True)
+            host: Mapped[str]
+            remote_host: Mapped[str]
+            exchange: Mapped[str]
+            strategy: Mapped[str]
+            state: Mapped[str]
+            stake_currency: Mapped[str]
+            trading_mode: Mapped[str]
+            run_mode: Mapped[str]
+            ft_version: Mapped[str]
+            strategy_version: Mapped[str]
+            starting_capital: Mapped[Optional[float]]
+            added: Mapped[int] = mapped_column(
+                BigInteger, default=self.timestamp(dt=datetime.now())
+            )
+            last_checked: Mapped[int] = mapped_column(
+                BigInteger,
+                default=self.timestamp(dt=datetime.now()),
+                onupdate=self.timestamp(dt=datetime.now()),
             )
 
         class Sysinfo(self.Base):  # type: ignore
             __tablename__ = "sysinfo"
 
-            id = db.Column(db.Integer, primary_key=True)
-            host_id = db.Column(db.Integer)
-            cpu_pct = db.Column(db.Numeric)
-            ram_pct = db.Column(db.Numeric)
-            last_process_ts = db.Column(db.Numeric, nullable=True)
-            added = db.Column(db.DateTime, default=datetime.now)
+            id: Mapped[intpk] = mapped_column(init=False)
+            host_id: Mapped[int]
+            cpu_pct: Mapped[float]
+            ram_pct: Mapped[float]
+            last_process_ts: Mapped[Optional[float]]
+            added: Mapped[int] = mapped_column(
+                BigInteger, default=self.timestamp(dt=datetime.now())
+            )
 
         class balances(self.Base):  # type: ignore
             __tablename__ = "balances"
 
-            host_id = db.Column(db.Integer, primary_key=True)
-            currency = db.Column(db.String, primary_key=True)
-            free = db.Column(db.Numeric)
-            balance = db.Column(db.Numeric)
+            host_id: Mapped[intpk] = mapped_column(init=False)
+            currency: Mapped[strpk] = mapped_column(init=False)
+            free: Mapped[float]
+            balance: Mapped[float]
 
         class base_lists(self.Base):  # type: ignore
             __tablename__ = "base_lists"
 
-            host_id = db.Column(db.Integer, primary_key=True)
-            quote = db.Column(db.String, primary_key=True)
-            list_type = db.Column(db.Integer, primary_key=True)
+            host_id: Mapped[intpk] = mapped_column(init=False)
+            quote: Mapped[strpk] = mapped_column(init=False)
+            list_type: Mapped[strpk] = mapped_column(init=False)
 
         class logs(self.Base):  # type: ignore
             __tablename__ = "logs"
 
-            id = db.Column(db.Integer, primary_key=True)
-            host_id = db.Column(db.Integer)
-            timestamp = db.Column(db.Integer)
-            name = db.Column(db.String)
-            level = db.Column(db.String)
-            message = db.Column(db.String)
+            id: Mapped[intpk] = mapped_column(init=False)
+            host_id: Mapped[int]
+            timestamp: Mapped[int] = mapped_column(BigInteger)
+            name: Mapped[str]
+            level: Mapped[str]
+            message: Mapped[str]
 
         class Prices(self.Base):  # type: ignore
             __tablename__ = "prices"
 
-            id = db.Column(db.Integer, primary_key=True)
-            exchange = db.Column(db.String)
-            trading_mode = db.Column(db.String)
-            symbol = db.Column(db.String)
-            price = db.Column(db.Numeric)
-            updated = db.Column(db.DateTime, default=datetime.now)
+            id: Mapped[intpk] = mapped_column(init=False)
+            exchange: Mapped[str]
+            trading_mode: Mapped[str]
+            symbol: Mapped[str]
+            price: Mapped[float]
+            updated: Mapped[int] = mapped_column(
+                BigInteger, default=self.timestamp(dt=datetime.now())
+            )
 
         class Trades(self.Base):  # type: ignore
             __tablename__ = "trades"
 
-            host_id = db.Column(db.Integer, primary_key=True)
-            trade_id = db.Column(db.Integer, primary_key=True)
-            pair = db.Column(db.String)
-            base_currency = db.Column(db.String)
-            quote_currency = db.Column(db.String)
-            exchange = db.Column(db.String)
+            host_id: Mapped[intpk] = mapped_column(init=False)
+            trade_id: Mapped[intpk] = mapped_column(init=False)
+            pair: Mapped[str]
+            base_currency: Mapped[str]
+            quote_currency: Mapped[str]
+            exchange: Mapped[str]
 
-            is_open = db.Column(db.Boolean)
-            amount = db.Column(db.Numeric)
-            stake_amount = db.Column(db.Numeric)
-            profit_abs = db.Column(db.Numeric)
-            enter_tag = db.Column(db.String)
+            is_open: Mapped[bool]
+            amount: Mapped[float]
+            stake_amount: Mapped[float]
+            profit_abs: Mapped[float]
+            enter_tag: Mapped[str]
 
-            fee_open_cost = db.Column(db.Numeric)
-            fee_open_currency = db.Column(db.String)
-            fee_close_cost = db.Column(db.Numeric)
-            fee_close_currency = db.Column(db.String)
+            fee_open_cost: Mapped[float]
+            fee_open_currency: Mapped[str]
+            fee_close_cost: Mapped[Optional[float]]
+            fee_close_currency: Mapped[Optional[str]]
 
-            open_timestamp = db.Column(db.Integer)
-            open_rate = db.Column(db.Numeric)
-            close_timestamp = db.Column(db.Integer)
-            close_rate = db.Column(db.Numeric)
+            open_timestamp: Mapped[int] = mapped_column(BigInteger)
+            open_rate: Mapped[float]
+            close_timestamp: Mapped[Optional[int]] = mapped_column(BigInteger)
+            close_rate: Mapped[Optional[float]]
 
-            exit_reason = db.Column(db.String)
-            stop_loss_abs = db.Column(db.Numeric)
-            leverage = db.Column(db.Numeric)
-            is_short = db.Column(db.Boolean)
-            trading_mode = db.Column(db.String)
-            funding_fees = db.Column(db.Numeric)
+            exit_reason: Mapped[Optional[str]]
+            stop_loss_abs: Mapped[float]
+            leverage: Mapped[float]
+            is_short: Mapped[bool]
+            trading_mode: Mapped[str]
+            funding_fees: Mapped[float]
 
         class Orders(self.Base):  # type: ignore
             __tablename__ = "orders"
 
-            host_id = db.Column(db.Integer, primary_key=True)
-            order_id = db.Column(db.Integer, primary_key=True)
-            trade_id = db.Column(db.Integer, primary_key=True)
+            host_id: Mapped[intpk] = mapped_column(init=False)
+            order_id: Mapped[strpk] = mapped_column(init=False)
+            trade_id: Mapped[intpk] = mapped_column(init=False)
 
-            amount = db.Column(db.Numeric)
-            filled = db.Column(db.Numeric)
-            ft_order_side = db.Column(db.String)
-            order_type = db.Column(db.String)
-            order_timestamp = db.Column(db.Integer)
-            order_filled_timestamp = db.Column(db.Integer)
-            ft_is_entry = db.Column(db.Boolean, nullable=True)
-            status = db.Column(db.String)
-            average = db.Column(db.Numeric, nullable=True)
+            amount: Mapped[float]
+            filled: Mapped[float]
+            ft_order_side: Mapped[str]
+            order_type: Mapped[str]
+            order_timestamp: Mapped[int] = mapped_column(BigInteger)
+            order_filled_timestamp: Mapped[int] = mapped_column(BigInteger)
+            ft_is_entry: Mapped[Optional[bool]]
+            status: Mapped[str]
+            average: Mapped[Optional[float]]
 
         self.Base.metadata.create_all(self.engine)  # type: ignore
         log.info("database tables loaded")
+
+    def timestamp(self, dt) -> int:
+        return int(dt.replace(tzinfo=timezone.utc).timestamp() * 1000)
 
     def get_table_object(self, table_name: str):
         self.Base.metadata.reflect(bind=self.engine)  # type: ignore
@@ -155,7 +175,8 @@ class Database:
 
     def get_hosts_and_modes(self) -> dict:
         table_object = self.get_table_object(table_name="hosts")
-        result = self.session.query(table_object).all()
+        with Session(self.engine) as session:
+            result = session.execute(select(table_object)).all()
         hosts: dict = {}
         if result is not None:
             for host in result:
@@ -167,9 +188,10 @@ class Database:
 
     def get_all_hosts(self, index: bool = False) -> dict:
         table_object = self.get_table_object(table_name="hosts")
-        result = self.session.query(table_object).all()
+        with Session(self.engine) as session:
+            result = session.execute(select(table_object)).all()
         hosts: dict = {"live": {}, "dry": {}, "recent": [], "open": []}
-        now = datetime.now()
+        now = self.timestamp(datetime.now(timezone.utc))
         if result is not None:
             for host in result:
                 difference = now - host[13]
@@ -184,8 +206,10 @@ class Database:
                     "ft_version": host[9],
                     "strategy_version": host[10],
                     "starting_capital": host[11],
-                    "last_checked": host[13].strftime("%Y-%m-%d %H:%M:%S"),
-                    "alert": difference.total_seconds() > 600,
+                    "last_checked": datetime.utcfromtimestamp(host[13] / 1000).strftime(
+                        "%Y-%m-%d %H:%M:%S"
+                    ),
+                    "alert": difference / 1000 > 600,
                 }
                 if index:
                     hosts[host[8]][host[0]]["closed_trades"] = self.get_trades_count(
@@ -265,59 +289,57 @@ class Database:
 
     def check_then_add_or_update_host(self, data):
         table_object = self.get_table_object(table_name="hosts")
-        check = (
-            self.session.query(table_object)
-            .filter_by(host=data["host"], remote_host=data["remote_host"])
-            .first()
-        )
-        if check is None:
-            log.info(
-                f"Adding host/remote host to db. Host: {data['host']} Remote host: {data['remote_host']}"
-            )
-            self.engine.execute(table_object.insert().values(data))
-            log.info(
-                f"Host saved. Host: {data['host']} Remote host: {data['remote_host']}"
-            )
-            check = (
-                self.session.query(table_object)
+        with Session(self.engine) as session:
+            check = session.scalars(
+                select(table_object)
                 .filter_by(host=data["host"], remote_host=data["remote_host"])
-                .first()
-            )
-            return check[0]
-        else:
-            log.info(
-                f"Updating host in db. Host: {data['host']} Remote host: {data['remote_host']}"
-            )
-            self.session.query(table_object).filter_by(
-                host=data["host"], remote_host=data["remote_host"]
-            ).update(data)
-            self.session.commit()
-            log.info(
-                f"Host updated. Host: {data['host']} Remote host: {data['remote_host']}"
-            )
-            check = (
-                self.session.query(table_object)
-                .filter_by(host=data["host"], remote_host=data["remote_host"])
-                .first()
-            )
-        return check[0]
+                .limit(1)
+            ).first()
+            if check is None:
+                log.info(
+                    f"Adding host/remote host to db. Host: {data['host']} Remote host: {data['remote_host']}"
+                )
+                session.execute(insert(table_object), data)
+                log.info(
+                    f"Host saved. Host: {data['host']} Remote host: {data['remote_host']}"
+                )
+                check = session.scalars(
+                    select(table_object)
+                    .filter_by(host=data["host"], remote_host=data["remote_host"])
+                    .limit(1)
+                ).first()
+            else:
+                log.info(
+                    f"Updating host in db. Host: {data['host']} Remote host: {data['remote_host']}"
+                )
+                filters = []
+                filters.append(table_object.c.host == data["host"])
+                filters.append(table_object.c.remote_host == data["remote_host"])
+                session.execute(update(table_object).where(*filters).values(data))
+                log.info(
+                    f"Host updated. Host: {data['host']} Remote host: {data['remote_host']}"
+                )
+            session.commit()
+        return check
 
     def get_current_price(self, exchange: str, symbol: str, trading_mode: str):
         table_object = self.get_table_object(table_name="prices")
-        price = (
-            self.session.query(table_object)
-            .filter_by(exchange=exchange, trading_mode=trading_mode, symbol=symbol)
-            .first()
-        )
+        with Session(self.engine) as session:
+            price = session.execute(
+                select(table_object)
+                .filter_by(exchange=exchange, trading_mode=trading_mode, symbol=symbol)
+                .limit(1)
+            ).first()
         return price
 
     def get_prices(self, exchange: str, trading_mode: str, quote: str):
         table_object = self.get_table_object(table_name="prices")
-        all_prices = (
-            self.session.query(table_object)
-            .filter_by(exchange=exchange, trading_mode=trading_mode)
-            .all()
-        )
+        with Session(self.engine) as session:
+            all_prices = session.execute(
+                select(table_object).filter_by(
+                    exchange=exchange, trading_mode=trading_mode
+                )
+            ).all()
         prices = []
         for symbol in all_prices:
             if symbol[3].endswith(quote):
@@ -326,28 +348,34 @@ class Database:
 
     def delete_then_update_price(self, exchange: str, market: str, data: dict):
         table_object = self.get_table_object(table_name="prices")
-        check = (
-            self.session.query(table_object)
-            .filter_by(exchange=exchange, trading_mode=market)
-            .first()
-        )
 
-        if check is not None:
-            if len(check) > 0:
-                log.info(f"Price data found for {exchange}/{market} deleting")
-                self.session.query(table_object).filter_by(
-                    exchange=exchange, trading_mode=market
-                ).delete()
-                self.session.commit()
-        for item in data:
-            item["exchange"] = exchange
-            item["trading_mode"] = market
-        self.engine.execute(table_object.insert().values(data))
+        with Session(self.engine) as session:
+            check = session.scalars(
+                select(table_object)
+                .filter_by(exchange=exchange, trading_mode=market)
+                .limit(1)
+            ).first()
+
+            if check is not None:
+                if check > 0:
+                    log.info(f"Price data found for {exchange}/{market} deleting")
+                    filters = []
+                    filters.append(table_object.c.exchange == exchange)
+                    filters.append(table_object.c.trading_mode == market)
+                    session.execute(delete(table_object).where(*filters))
+            for item in data:
+                item["exchange"] = exchange
+                item["trading_mode"] = market
+            session.execute(insert(table_object), data)
+            session.commit()
         log.info(f"Price data saved for {exchange}/{market}")
 
     def get_balances(self, host_id: int):
         table_object = self.get_table_object(table_name="balances")
-        balances = self.session.query(table_object).filter_by(host_id=host_id).all()
+        with Session(self.engine) as session:
+            balances = session.execute(
+                select(table_object).filter_by(host_id=host_id)
+            ).all()
         return balances
 
     def get_trades(
@@ -358,20 +386,17 @@ class Database:
         sort: bool = False,
     ):
         table_object = self.get_table_object(table_name="trades")
-        int_is_open: int = 1 if is_open else 0
-        if sort:
-            trades = (
-                self.session.query(table_object)
-                .filter_by(host_id=host_id, is_open=int_is_open)
-                .order_by(table_object.c.close_timestamp.desc())
-                .all()
-            )
-        else:
-            trades = (
-                self.session.query(table_object)
-                .filter_by(host_id=host_id, is_open=is_open)
-                .all()
-            )
+        with Session(self.engine) as session:
+            if sort:
+                trades = session.execute(
+                    select(table_object)
+                    .filter_by(host_id=host_id, is_open=is_open)
+                    .order_by(table_object.c.close_timestamp.desc())
+                ).all()
+            else:
+                trades = session.execute(
+                    select(table_object).filter_by(host_id=host_id, is_open=is_open)
+                ).all()
         if limit is not None:
             return trades[:limit]
         return trades
@@ -384,7 +409,6 @@ class Database:
         won: bool | None = None,
     ) -> int:
         table_object = self.get_table_object(table_name="trades")
-        int_is_open: int = 1 if is_open else 0
         filters = []
         if won is not None:
             if won:
@@ -393,27 +417,23 @@ class Database:
                 filters.append(table_object.c.profit_abs < 0)
         filters.append(table_object.c.quote_currency == quote_currency)
         filters.append(table_object.c.host_id == host_id)
-        filters.append(table_object.c.is_open == int_is_open)
-        return (
-            self.session.query(func.count(table_object.c.trade_id))
-            .filter(*filters)
-            .scalar()
-        )
+        filters.append(table_object.c.is_open == is_open)
+        with Session(self.engine) as session:
+            count = session.scalar(select(func.count()).select_from(table_object))
+        return count
 
     def get_trade_profit(self, host_id: int, quote_currency: str, is_open: bool = True):
         table_object = self.get_table_object(table_name="trades")
         filters = []
-        if is_open:
-            filters.append(table_object.c.is_open == 1)
-        else:
-            filters.append(table_object.c.is_open == 0)
+        filters.append(table_object.c.is_open == is_open)
         filters.append(table_object.c.host_id == host_id)
         filters.append(table_object.c.quote_currency == quote_currency)
-        result = (
-            self.session.query(func.sum(table_object.c.profit_abs))
-            .filter(*filters)
-            .scalar()
-        )
+        with Session(self.engine) as session:
+            result = session.scalar(
+                select(func.sum(table_object.c.profit_abs))
+                .select_from(table_object)
+                .filter(*filters)
+            )
         if result is None:
             return 0.0
         else:
@@ -428,12 +448,18 @@ class Database:
             filters.append(table_object.c.status == "closed")
         filters.append(table_object.c.host_id == host_id)
         filters.append(table_object.c.trade_id == trade_id)
-
-        return self.session.query(table_object).filter(*filters).all()
+        with Session(self.engine) as session:
+            orders = session.execute(select(table_object).filter(*filters)).all()
+        return orders
 
     def get_closed_profit(self):
         table_object = self.get_table_object(table_name="trades")
-        result = self.session.query(func.sum(table_object.c.profit_abs)).scalar()
+        with Session(self.engine) as session:
+            result = session.scalar(
+                select(func.sum(table_object.c.profit_abs))
+                .select_from(table_object)
+                .filter()
+            )
         if result is None:
             return 0.0
         else:
@@ -445,27 +471,24 @@ class Database:
         table_object = self.get_table_object(table_name="trades")
 
         filters = []
-        if is_open:
-            filters.append(table_object.c.is_open == 1)
-        else:
-            filters.append(table_object.c.is_open == 0)
-
+        filters.append(table_object.c.is_open == is_open)
         filters.append(table_object.c.host_id == host_id)
         filters.append(table_object.c.quote_currency == quote_currency)
         filters.append(table_object.c.profit_abs >= 0)
 
-        total_profit = (
-            self.session.query(func.sum(table_object.c.profit_abs))
-            .filter(*filters)
-            .scalar()
-        )
-        del filters[-1]
-        filters.append(table_object.c.profit_abs < 0)
-        total_loss = (
-            self.session.query(func.sum(table_object.c.profit_abs))
-            .filter(*filters)
-            .scalar()
-        )
+        with Session(self.engine) as session:
+            total_profit = session.scalar(
+                select(func.sum(table_object.c.profit_abs))
+                .select_from(table_object)
+                .filter(*filters)
+            )
+            del filters[-1]
+            filters.append(table_object.c.profit_abs < 0)
+            total_loss = session.scalar(
+                select(func.sum(table_object.c.profit_abs))
+                .select_from(table_object)
+                .filter(*filters)
+            )
         if total_profit is None:
             return 0.0
         if total_loss is None:
@@ -482,11 +505,12 @@ class Database:
             filters.append(table_object.c.close_date >= start_datetime)
         if end_datetime is not None:
             filters.append(table_object.c.close_date <= end_datetime)
-        result = (
-            self.session.query(func.sum(table_object.c.profit_abs))
-            .filter(*filters)
-            .scalar()
-        )
+        with Session(self.engine) as session:
+            result = session.scalar(
+                select(func.sum(table_object.c.profit_abs))
+                .select_from(table_object)
+                .filter(*filters)
+            )
         if result is None:
             return 0.0
         else:
@@ -497,86 +521,107 @@ class Database:
         log.info(
             f"Adding sysinfo. Host_id: {data['host_id']} CPU: {data['cpu_pct']} RAM: {data['ram_pct']}"
         )
-        self.engine.execute(table_object.insert().values(data))
+
+        with Session(self.engine) as session:
+            session.execute(insert(table_object), data)
+            session.commit()
 
     def add_last_process_ts(self, data: int, host_id: int):
         table_object = self.get_table_object(table_name="sysinfo")
-        result = (
-            self.session.query(table_object)
-            .filter_by(host_id=host_id)
-            .order_by(table_object.c.id.desc())
-            .first()
-        )
-        if result is not None:
-            self.session.query(table_object).filter_by(
-                host_id=host_id, id=result[0]
-            ).update({"last_process_ts": data})
-
-            self.session.commit()
+        with Session(self.engine) as session:
+            result = session.scalars(
+                select(table_object)
+                .filter_by(host_id=host_id)
+                .order_by(table_object.c.id.desc())
+                .limit(1)
+            ).first()
+            if result is not None:
+                filters = []
+                filters.append(table_object.c.host_id == host_id)
+                filters.append(table_object.c.id == result)
+                session.execute(
+                    update(table_object)
+                    .where(*filters)
+                    .values({"last_process_ts": data})
+                )
+                session.commit()
 
     def delete_then_add_baselist(
         self, data: list, host_id: int, list_type: str = "white"
     ):
         table_object = self.get_table_object(table_name="base_lists")
+        with Session(self.engine) as session:
+            check = session.scalars(
+                select(table_object)
+                .filter_by(host_id=host_id, list_type=list_type)
+                .limit(1)
+            ).first()
 
-        check = (
-            self.session.query(table_object)
-            .filter_by(host_id=host_id, list_type=list_type)
-            .first()
-        )
+            if check is not None:
+                if check > 0:
+                    log.info(
+                        f"{list_type}list data found for host {host_id} - deleting"
+                    )
+                    filters = []
+                    filters.append(table_object.c.host_id == host_id)
+                    filters.append(table_object.c.list_type == list_type)
+                    session.execute(delete(table_object).where(*filters))
 
-        if check is not None:
-            if len(check) > 0:
-                log.info(f"{list_type}list data found for host {host_id} - deleting")
-                self.session.query(table_object).filter_by(
-                    host_id=host_id, list_type=list_type
-                ).delete()
-                self.session.commit()
-
-        formatted_data: list = []
-        log.info(data)
-        for item in data:
-            quote = item.split("/")[0]
-            formatted_data.append(
-                {"host_id": host_id, "quote": quote, "list_type": list_type}
-            )
-        if len(formatted_data) > 0:
-            self.engine.execute(table_object.insert().values(formatted_data))
-            log.info(f"{list_type}list data updated for host {host_id}")
+            formatted_data: list = []
+            for item in data:
+                quote = item.split("/")[0]
+                formatted_data.append(
+                    {"host_id": host_id, "quote": quote, "list_type": list_type}
+                )
+            if len(formatted_data) > 0:
+                session.execute(insert(table_object), formatted_data)
+                log.info(f"{list_type}list data updated for host {host_id}")
+            session.commit()
 
     def update_starting_capital(self, data: float, host_id: int):
         table_object = self.get_table_object(table_name="hosts")
-        self.session.query(table_object).filter_by(id=host_id).update(
-            {"starting_capital": data}
-        )
-        self.session.commit()
+        with Session(self.engine) as session:
+            filters = []
+            filters.append(table_object.c.id == host_id)
+            session.execute(
+                update(table_object).where(*filters).values({"starting_capital": data})
+            )
+            session.commit()
 
     def update_balances(self, data: list, host_id: int):
         table_object = self.get_table_object(table_name="balances")
         table_keys = table_object.columns.keys()
-        check = self.session.query(table_object).filter_by(host_id=host_id).first()
+        with Session(self.engine) as session:
+            check = session.scalars(
+                select(table_object).filter_by(host_id=host_id).limit(1)
+            ).first()
 
-        if check is not None:
-            if len(check) > 0:
-                log.info(f"balances found for host {host_id} - deleting")
-                self.session.query(table_object).filter_by(host_id=host_id).delete()
-                self.session.commit()
-        for balance in data:
-            adjusted_balance = {}
-            balance["host_id"] = host_id
-            for key in table_keys:
-                adjusted_balance[key] = balance[key]
-            self.engine.execute(table_object.insert().values(adjusted_balance))
+            if check is not None:
+                if check > 0:
+                    log.info(f"balances found for host {host_id} - deleting")
+                    filters = []
+                    filters.append(table_object.c.host_id == host_id)
+                    session.execute(delete(table_object).where(*filters))
+
+            for balance in data:
+                adjusted_balance = {}
+                balance["host_id"] = host_id
+                for key in table_keys:
+                    adjusted_balance[key] = balance[key]
+                session.execute(insert(table_object), adjusted_balance)
+            log.info(f"Updating balances for host {host_id}")
+            session.commit()
 
     def update_logs(self, data: list, host_id: int):
         table_object = self.get_table_object(table_name="logs")
 
-        result = (
-            self.session.query(table_object)
-            .filter_by(host_id=host_id)
-            .order_by(table_object.c.id.desc())
-            .first()
-        )
+        with Session(self.engine) as session:
+            result = session.execute(
+                select(table_object)
+                .filter_by(host_id=host_id)
+                .order_by(table_object.c.id.desc())
+                .limit(1)
+            ).first()
 
         timestamp = 0
         if result is not None:
@@ -597,23 +642,27 @@ class Database:
                 logs.append(log_data)
 
         if len(logs) > 0:
-            self.engine.execute(table_object.insert().values(logs))
+            with Session(self.engine) as session:
+                session.execute(insert(table_object), logs)
+                session.commit()
 
     def get_oldest_open_trade_id(self, host_id: int):
         table_object = self.get_table_object(table_name="trades")
-        result = (
-            self.session.query(table_object)
-            .filter_by(host_id=host_id, is_open=True)
-            .order_by(table_object.c.trade_id.asc())
-            .first()
-        )
-        if result is None:
-            result = (
-                self.session.query(table_object)
-                .filter_by(host_id=host_id)
+        with Session(self.engine) as session:
+            result = session.execute(
+                select(table_object)
+                .filter_by(host_id=host_id, is_open=True)
                 .order_by(table_object.c.trade_id.asc())
-                .first()
-            )
+                .limit(1)
+            ).first()
+        if result is None:
+            with Session(self.engine) as session:
+                result = session.execute(
+                    select(table_object)
+                    .filter_by(host_id=host_id, is_open=True)
+                    .order_by(table_object.c.trade_id.asc())
+                    .limit(1)
+                ).first()
             if result is None:
                 return 0
             else:
@@ -627,11 +676,12 @@ class Database:
         for trade in data:
             trade = trade | {"host_id": host_id}
             trade["trading_mode"] = trade["trading_mode"].upper()
-            check = (
-                self.session.query(table_object)
-                .filter_by(host_id=host_id, trade_id=trade["trade_id"])
-                .first()
-            )
+            with Session(self.engine) as session:
+                check = session.execute(
+                    select(table_object)
+                    .filter_by(host_id=host_id, trade_id=trade["trade_id"])
+                    .limit(1)
+                ).first()
             adjusted_trade = {}
             for key in table_keys:
                 adjusted_trade[key] = trade[key]
@@ -639,13 +689,20 @@ class Database:
                 log.info(
                     f"Adding trade to db. Host: {host_id} Trade: {trade['trade_id']} - {trade['pair']}"
                 )
-                self.engine.execute(table_object.insert().values(adjusted_trade))
+                with Session(self.engine) as session:
+                    session.execute(insert(table_object), adjusted_trade)
+                    session.commit()
             else:
                 log.info(f"Trade {trade['trade_id']} already in DB, updating")
-                self.session.query(table_object).filter_by(
-                    host_id=host_id, trade_id=trade["trade_id"]
-                ).update(adjusted_trade)
-                self.session.commit()
+                with Session(self.engine) as session:
+                    filters = []
+                    filters.append(table_object.c.host_id == host_id)
+                    filters.append(table_object.c.trade_id == trade["trade_id"])
+                    session.execute(
+                        update(table_object).where(*filters).values(adjusted_trade)
+                    )
+                    session.commit()
+
             self.check_then_update_or_add_orders(
                 data=trade["orders"], host_id=host_id, trade_id=trade["trade_id"]
             )
@@ -655,13 +712,14 @@ class Database:
         table_keys = table_object.columns.keys()
         for order in data:
             order = order | {"host_id": host_id, "trade_id": trade_id}
-            check = (
-                self.session.query(table_object)
-                .filter_by(
-                    host_id=host_id, trade_id=trade_id, order_id=order["order_id"]
-                )
-                .first()
-            )
+            with Session(self.engine) as session:
+                check = session.execute(
+                    select(table_object)
+                    .filter_by(
+                        host_id=host_id, trade_id=trade_id, order_id=order["order_id"]
+                    )
+                    .limit(1)
+                ).first()
             adjusted_order = {}
             for key in table_keys:
                 if key in order:
@@ -671,10 +729,17 @@ class Database:
                 log.info(
                     f"Adding order to db. Host: {host_id} Trade: {trade_id} Order:{order['order_id']}"
                 )
-                self.engine.execute(table_object.insert().values(adjusted_order))
+                with Session(self.engine) as session:
+                    session.execute(insert(table_object), adjusted_order)
+                    session.commit()
             else:
                 log.info(f"Order {order['order_id']} already in DB, updating")
-                self.session.query(table_object).filter_by(
-                    host_id=host_id, trade_id=trade_id, order_id=order["order_id"]
-                ).update(adjusted_order)
-                self.session.commit()
+                with Session(self.engine) as session:
+                    filters = []
+                    filters.append(table_object.c.host_id == host_id)
+                    filters.append(table_object.c.trade_id == trade_id)
+                    filters.append(table_object.c.order_id == order["order_id"])
+                    session.execute(
+                        update(table_object).where(*filters).values(adjusted_order)
+                    )
+                    session.commit()
