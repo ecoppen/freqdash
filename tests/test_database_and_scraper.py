@@ -11,7 +11,7 @@ from freqdash.models.database import Database
 from freqdash.scraper.scraper import Scraper
 
 
-class TestScraper(unittest.TestCase):
+class TestDatabaseAndScraper(unittest.TestCase):
     db = DBConfig(
         engine="sqlite", username="", password="", host="127.0.0.1", port=5432, name=""
     )
@@ -24,6 +24,22 @@ class TestScraper(unittest.TestCase):
         "recent": [],
         "open": [],
     }
+    assert (
+        database.get_current_price(
+            exchange="binance", symbol="BTCUSDT", trading_mode="SPOT"
+        )
+        is None
+    )
+    assert (
+        database.get_prices(exchange="binance", quote="USDT", trading_mode="SPOT") == []
+    )
+    assert database.get_balances(host_id=1) == []
+    assert database.get_trades(host_id=1) == []
+    assert database.get_trades_count(host_id=1, quote_currency="USDT") == 0
+    assert database.get_trade_profit(host_id=1, quote_currency="USDT") == 0.0
+    assert database.get_orders_for_trade(host_id=1, trade_id=1) == []
+    assert database.get_profit_factor(host_id=1, quote_currency="USDT") == 0.0
+    assert database.get_oldest_open_trade_id(host_id=1) == 0
 
     remote_freqtrade_api = RemoteFreqtradeAPI(
         ssh_host="127.0.0.1",
