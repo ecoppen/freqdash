@@ -72,7 +72,7 @@ class Database:
 
             id: Mapped[intpk] = mapped_column(init=False)
             host_id: Mapped[int]
-            cpu_pct: Mapped[float]
+            cpu_pct: Mapped[str]
             ram_pct: Mapped[float]
             last_process_ts: Mapped[Optional[float]]
             added: Mapped[int] = mapped_column(
