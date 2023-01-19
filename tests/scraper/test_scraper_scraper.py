@@ -17,6 +17,14 @@ class TestScraper(unittest.TestCase):
     )
     database = Database(config=db)
 
+    assert database.get_hosts_and_modes() == {}
+    assert database.get_all_hosts() == {
+        "live": {},
+        "dry": {},
+        "recent": [],
+        "open": [],
+    }
+
     remote_freqtrade_api = RemoteFreqtradeAPI(
         ssh_host="127.0.0.1",
         ssh_port="1",
