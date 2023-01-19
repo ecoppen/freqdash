@@ -422,7 +422,9 @@ class Database:
         filters.append(table_object.c.host_id == host_id)
         filters.append(table_object.c.is_open == is_open)
         with Session(self.engine) as session:
-            count = session.scalar(select(func.count()).select_from(table_object))
+            count = session.scalar(
+                select(func.count()).select_from(table_object).filter(*filters)
+            )
         return count
 
     def get_trade_profit(self, host_id: int, quote_currency: str, is_open: bool = True):
