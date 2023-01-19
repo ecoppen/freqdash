@@ -1,4 +1,5 @@
 import json
+from enum import Enum
 
 from pydantic import (
     BaseModel,
@@ -8,6 +9,20 @@ from pydantic import (
     root_validator,
     validator,
 )
+
+
+class Databases(Enum):
+    POSTGRES = "postgres"
+    SQLITE = "sqlite"
+
+
+class Database(BaseModel):
+    engine: str = Databases.SQLITE.value  # type: ignore
+    username: str | None
+    password: str | None
+    host: IPvAnyAddress = IPvAnyAddress.validate("127.0.0.1")  # type: ignore
+    port: int = Field(5432, ge=1, le=65535)
+    name: str = "freqdash"
 
 
 class LocalFreqtradeAPI(BaseModel):
@@ -40,7 +55,7 @@ class Config(BaseModel):
     local_freqtrade_instances: list[LocalFreqtradeAPI] | None
     remote_freqtrade_instances: list[RemoteFreqtradeAPI] | None
     scrape_interval: int = 600
-    database_name: str = "freqdash"
+    database: Database
 
     @validator("scrape_interval")
     def interval_amount(cls, v):

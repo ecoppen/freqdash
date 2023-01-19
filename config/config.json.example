@@ -1,4 +1,12 @@
 {
+  "database": {
+    "engine": "postgres",
+    "username": "postgres",
+    "password": "",
+    "host": "127.0.0.1",
+    "port": 5432,
+    "name": "freqdash"
+  },
   "local_freqtrade_instances": [
     {
       "local_host": "127.0.0.1",
@@ -19,6 +27,5 @@
       "api_password": ""
     }
   ],
-  "scrape_interval": 600,
-  "database_name": "freqdash"
+  "scrape_interval": 600
 }

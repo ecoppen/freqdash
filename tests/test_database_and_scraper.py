@@ -5,14 +5,41 @@ from unittest.mock import MagicMock, patch
 import requests  # type: ignore
 
 from freqdash.connection.tunnel import Tunnel
+from freqdash.core.config import Database as DBConfig
 from freqdash.core.config import RemoteFreqtradeAPI
 from freqdash.models.database import Database
 from freqdash.scraper.scraper import Scraper
 
 
-class TestScraper(unittest.TestCase):
-    path = Path(":memory:")
-    database = Database(path=path)
+class TestDatabaseAndScraper(unittest.TestCase):
+    db = DBConfig(
+        engine="sqlite", username="", password="", host="127.0.0.1", port=5432, name=""
+    )
+    database = Database(config=db)
+
+    assert database.get_hosts_and_modes() == {}
+    assert database.get_all_hosts() == {
+        "live": {},
+        "dry": {},
+        "recent": [],
+        "open": [],
+    }
+    assert (
+        database.get_current_price(
+            exchange="binance", symbol="BTCUSDT", trading_mode="SPOT"
+        )
+        is None
+    )
+    assert (
+        database.get_prices(exchange="binance", quote="USDT", trading_mode="SPOT") == []
+    )
+    assert database.get_balances(host_id=1) == []
+    assert database.get_trades(host_id=1) == []
+    assert database.get_trades_count(host_id=1, quote_currency="USDT") == 0
+    assert database.get_trade_profit(host_id=1, quote_currency="USDT") == 0.0
+    assert database.get_orders_for_trade(host_id=1, trade_id=1) == []
+    assert database.get_profit_factor(host_id=1, quote_currency="USDT") == 0.0
+    assert database.get_oldest_open_trade_id(host_id=1) == 0
 
     remote_freqtrade_api = RemoteFreqtradeAPI(
         ssh_host="127.0.0.1",
@@ -45,7 +72,9 @@ class TestScraper(unittest.TestCase):
         assert self.scraper.get_jwt_token(self.scraper.tunnels[0]) == "no_jwt_retrieved"
 
     @patch("freqdash.scraper.scraper.send_public_request")
-    def test_scraper_get_config(self, send_post):
+    def test_scraper(self, send_post):
+        send_post.return_value = ["header", {}]
+        assert self.scraper.get_config(self.scraper.tunnels[0]) == {}
         send_post.return_value = [
             "header",
             {
@@ -61,7 +90,8 @@ class TestScraper(unittest.TestCase):
                 "strategy_version": "v1.5",
             },
         ]
-        assert self.scraper.get_config(self.scraper.tunnels[0]) == {
+        config = self.scraper.get_config(self.scraper.tunnels[0])
+        assert config == {
             "host": "127.0.0.1:1",
             "remote_host": "127.0.0.2:2",
             "exchange": "binance",
@@ -73,18 +103,23 @@ class TestScraper(unittest.TestCase):
             "ft_version": "2022.12",
             "strategy_version": "v1.5",
         }
-        send_post.return_value = ["header", {}]
-        assert self.scraper.get_config(self.scraper.tunnels[0]) == {}
+        config["trading_mode"] = config["trading_mode"].upper()
+        result = self.database.check_then_add_or_update_host(data=config)
+        assert result == 1
+        assert self.database.get_hosts_and_modes() == {"binance": ["SPOT"]}
 
-    @patch("freqdash.scraper.scraper.send_public_request")
-    def test_scraper_get_sysinfo(self, send_post):
+        send_post.return_value = ["header", {}]
+        assert self.scraper.get_sysinfo(self.scraper.tunnels[0]) == {}
+
         send_post.return_value = ["header", {"cpu_pct": [5, 6], "ram_pct": 5}]
-        assert self.scraper.get_sysinfo(self.scraper.tunnels[0]) == {
+        sysinfo = self.scraper.get_sysinfo(self.scraper.tunnels[0])
+        assert sysinfo == {
             "cpu_pct": "5,6",
             "ram_pct": 5,
         }
-        send_post.return_value = ["header", {}]
-        assert self.scraper.get_sysinfo(self.scraper.tunnels[0]) == {}
+        data = {"host_id": result} | sysinfo
+        self.database.add_sysinfo(data=data)
+        assert self.database.get_oldest_open_trade_id(host_id=result) == 0
 
 
 if __name__ == "__main__":
