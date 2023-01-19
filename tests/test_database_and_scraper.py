@@ -72,7 +72,9 @@ class TestDatabaseAndScraper(unittest.TestCase):
         assert self.scraper.get_jwt_token(self.scraper.tunnels[0]) == "no_jwt_retrieved"
 
     @patch("freqdash.scraper.scraper.send_public_request")
-    def test_scraper_get_config(self, send_post):
+    def test_scraper(self, send_post):
+        send_post.return_value = ["header", {}]
+        assert self.scraper.get_config(self.scraper.tunnels[0]) == {}
         send_post.return_value = [
             "header",
             {
@@ -88,7 +90,8 @@ class TestDatabaseAndScraper(unittest.TestCase):
                 "strategy_version": "v1.5",
             },
         ]
-        assert self.scraper.get_config(self.scraper.tunnels[0]) == {
+        config = self.scraper.get_config(self.scraper.tunnels[0])
+        assert config == {
             "host": "127.0.0.1:1",
             "remote_host": "127.0.0.2:2",
             "exchange": "binance",
@@ -100,18 +103,23 @@ class TestDatabaseAndScraper(unittest.TestCase):
             "ft_version": "2022.12",
             "strategy_version": "v1.5",
         }
-        send_post.return_value = ["header", {}]
-        assert self.scraper.get_config(self.scraper.tunnels[0]) == {}
+        config["trading_mode"] = config["trading_mode"].upper()
+        result = self.database.check_then_add_or_update_host(data=config)
+        assert result == 1
+        assert self.database.get_hosts_and_modes() == {"binance": ["SPOT"]}
 
-    @patch("freqdash.scraper.scraper.send_public_request")
-    def test_scraper_get_sysinfo(self, send_post):
+        send_post.return_value = ["header", {}]
+        assert self.scraper.get_sysinfo(self.scraper.tunnels[0]) == {}
+
         send_post.return_value = ["header", {"cpu_pct": [5, 6], "ram_pct": 5}]
-        assert self.scraper.get_sysinfo(self.scraper.tunnels[0]) == {
+        sysinfo = self.scraper.get_sysinfo(self.scraper.tunnels[0])
+        assert sysinfo == {
             "cpu_pct": "5,6",
             "ram_pct": 5,
         }
-        send_post.return_value = ["header", {}]
-        assert self.scraper.get_sysinfo(self.scraper.tunnels[0]) == {}
+        data = {"host_id": result} | sysinfo
+        self.database.add_sysinfo(data=data)
+        assert self.database.get_oldest_open_trade_id(host_id=result) == 0
 
 
 if __name__ == "__main__":
