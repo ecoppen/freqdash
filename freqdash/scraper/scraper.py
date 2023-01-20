@@ -51,12 +51,15 @@ class Scraper:
                 self.database.update_balances(
                     data=balance["currencies"], host_id=result
                 )
+
                 logs = self.get_logs(tunnel=tunnel)
                 self.database.update_logs(data=logs, host_id=result)
                 locks = self.get_locks(tunnel=tunnel)
                 log.info(locks)
+
                 whitelist = self.get_whitelist(tunnel=tunnel)
                 self.database.delete_then_add_baselist(data=whitelist, host_id=result)
+
                 blacklist = self.get_blacklist(tunnel=tunnel)
                 self.database.delete_then_add_baselist(
                     data=blacklist, host_id=result, list_type="black"
