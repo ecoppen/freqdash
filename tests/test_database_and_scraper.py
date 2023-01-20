@@ -734,6 +734,382 @@ class TestDatabaseAndScraper(unittest.TestCase):
             (1, "USDT", 377.22204255, 377.22204255),
         ]
 
+        send_post.return_value = [
+            "header",
+            {
+                "logs": [
+                    [
+                        "2023-01-19 07:53:26",
+                        1674114806030.4727,
+                        "freqtrade.worker",
+                        "INFO",
+                        "Bot heartbeat. PID=843991, version='2022.12, strategy_version: v1.5', state='RUNNING'",
+                    ],
+                    [
+                        "2023-01-19 07:54:26",
+                        1674114866030.5437,
+                        "freqtrade.worker",
+                        "INFO",
+                        "Bot heartbeat. PID=843991, version='2022.12, strategy_version: v1.5', state='RUNNING'",
+                    ],
+                    [
+                        "2023-01-19 07:55:31",
+                        1674114931030.0105,
+                        "freqtrade.worker",
+                        "INFO",
+                        "Bot heartbeat. PID=843991, version='2022.12, strategy_version: v1.5', state='RUNNING'",
+                    ],
+                    [
+                        "2023-01-19 07:56:31",
+                        1674114991035.595,
+                        "freqtrade.worker",
+                        "INFO",
+                        "Bot heartbeat. PID=843991, version='2022.12, strategy_version: v1.5', state='RUNNING'",
+                    ],
+                    [
+                        "2023-01-19 07:57:36",
+                        1674115056036.3547,
+                        "freqtrade.worker",
+                        "INFO",
+                        "Bot heartbeat. PID=843991, version='2022.12, strategy_version: v1.5', state='RUNNING'",
+                    ],
+                ]
+            },
+        ]
+
+        logs = self.scraper.get_logs(tunnel=self.scraper.tunnels[0])
+        self.database.update_logs(data=logs, host_id=result)
+
+        send_post.return_value = ["header", {"locks": ["LUNC/USDT", "ADA/USDT"]}]
+        locks = self.scraper.get_locks(tunnel=self.scraper.tunnels[0])
+        assert locks == ["LUNC/USDT", "ADA/USDT"]
+
+        send_post.return_value = ["header", {"whitelist": ["BTC/USDT", "HOOK/USDT"]}]
+        whitelist = self.scraper.get_whitelist(tunnel=self.scraper.tunnels[0])
+        self.database.delete_then_add_baselist(data=whitelist, host_id=result)
+
+        send_post.return_value = ["header", {"blacklist": ["BNB/USDT"]}]
+        blacklist = self.scraper.get_blacklist(tunnel=self.scraper.tunnels[0])
+        self.database.delete_then_add_baselist(
+            data=blacklist, host_id=result, list_type="black"
+        )
+
+        send_post.return_value = [
+            "header",
+            [
+                {
+                    "trade_id": 2,
+                    "pair": "HOOK/USDT",
+                    "base_currency": "HOOK",
+                    "quote_currency": "USDT",
+                    "is_open": True,
+                    "is_short": False,
+                    "exchange": "binance",
+                    "amount": 157.4,
+                    "amount_requested": 25.63735157,
+                    "stake_amount": 352.89312,
+                    "max_stake_amount": 352.89312,
+                    "strategy": "PocketRocket",
+                    "enter_tag": "force_entry",
+                    "timeframe": 1,
+                    "fee_open": 0.00074952,
+                    "fee_open_cost": 0.2645004513024,
+                    "fee_open_currency": "BNB",
+                    "fee_close": 0.00074952,
+                    "fee_close_cost": None,
+                    "fee_close_currency": None,
+                    "open_date": "2022-12-10 17:45:05",
+                    "open_timestamp": 1670694305946,
+                    "open_rate": 2.242014739517154,
+                    "open_rate_requested": 1.5716,
+                    "open_trade_value": 353.15762045,
+                    "close_date": None,
+                    "close_timestamp": None,
+                    "close_rate": None,
+                    "close_rate_requested": None,
+                    "close_profit": None,
+                    "close_profit_pct": None,
+                    "close_profit_abs": None,
+                    "profit_ratio": -0.30666466,
+                    "profit_pct": -30.67,
+                    "profit_abs": -108.30096307,
+                    "profit_fiat": -108.62586595920999,
+                    "exit_reason": None,
+                    "exit_order_status": None,
+                    "stop_loss_abs": 0.0275,
+                    "stop_loss_ratio": -0.99,
+                    "stop_loss_pct": -99.0,
+                    "stoploss_order_id": None,
+                    "stoploss_last_update": None,
+                    "stoploss_last_update_timestamp": None,
+                    "initial_stop_loss_abs": 0.0275,
+                    "initial_stop_loss_ratio": -0.99,
+                    "initial_stop_loss_pct": -99.0,
+                    "min_rate": 1.0792,
+                    "max_rate": 2.7977,
+                    "open_order_id": None,
+                    "orders": [
+                        {
+                            "pair": "HOOK/USDT",
+                            "order_id": "22723010",
+                            "status": "closed",
+                            "remaining": 0.0,
+                            "amount": 25.6,
+                            "safe_price": 2.7426,
+                            "cost": 70.21056,
+                            "filled": 25.6,
+                            "ft_order_side": "buy",
+                            "order_type": "limit",
+                            "is_open": False,
+                            "order_timestamp": 1670694305940,
+                            "order_filled_timestamp": 1670694306185,
+                        },
+                        {
+                            "pair": "HOOK/USDT",
+                            "order_id": "22975038",
+                            "status": "closed",
+                            "remaining": 0.0,
+                            "amount": 27.3,
+                            "safe_price": 2.5716,
+                            "cost": 70.20468,
+                            "filled": 27.3,
+                            "ft_order_side": "buy",
+                            "order_type": "limit",
+                            "is_open": False,
+                            "order_timestamp": 1670700605390,
+                            "order_filled_timestamp": 1670700606215,
+                        },
+                        {
+                            "pair": "HOOK/USDT",
+                            "order_id": "23239720",
+                            "status": "closed",
+                            "remaining": 0.0,
+                            "amount": 28.7,
+                            "safe_price": 2.453,
+                            "cost": 70.4011,
+                            "filled": 28.7,
+                            "ft_order_side": "buy",
+                            "order_type": "limit",
+                            "is_open": False,
+                            "order_timestamp": 1670708705179,
+                            "order_filled_timestamp": 1670708705956,
+                        },
+                        {
+                            "pair": "HOOK/USDT",
+                            "order_id": "23994826",
+                            "status": "closed",
+                            "remaining": 0.0,
+                            "amount": 30.2,
+                            "safe_price": 2.3281,
+                            "cost": 70.30862,
+                            "filled": 30.2,
+                            "ft_order_side": "buy",
+                            "order_type": "limit",
+                            "is_open": False,
+                            "order_timestamp": 1670740205653,
+                            "order_filled_timestamp": 1670740207081,
+                        },
+                        {
+                            "pair": "HOOK/USDT",
+                            "order_id": "31531755",
+                            "status": "canceled",
+                            "remaining": 19.0,
+                            "amount": 44.8,
+                            "safe_price": 1.5756,
+                            "cost": 40.65048,
+                            "filled": 25.8,
+                            "ft_order_side": "buy",
+                            "order_type": "limit",
+                            "is_open": False,
+                            "order_timestamp": 1671363007286,
+                            "order_filled_timestamp": 1671363311197,
+                        },
+                        {
+                            "pair": "HOOK/USDT",
+                            "order_id": "31535529",
+                            "status": "closed",
+                            "remaining": 0.0,
+                            "amount": 19.8,
+                            "safe_price": 1.5716,
+                            "cost": 31.11768,
+                            "filled": 19.8,
+                            "ft_order_side": "buy",
+                            "order_type": "limit",
+                            "is_open": False,
+                            "order_timestamp": 1671363905813,
+                            "order_filled_timestamp": 1671363906585,
+                        },
+                    ],
+                    "leverage": 1.0,
+                    "interest_rate": 0.0,
+                    "liquidation_price": None,
+                    "funding_fees": 0.0,
+                    "trading_mode": "spot",
+                    "stoploss_current_dist": -1.5292999999999999,
+                    "stoploss_current_dist_pct": -98.23,
+                    "stoploss_current_dist_ratio": -0.98233556,
+                    "stoploss_entry_dist": -348.83236475,
+                    "stoploss_entry_dist_ratio": -0.98775262,
+                    "current_profit": -0.30666466,
+                    "current_profit_abs": -108.30096307,
+                    "current_profit_pct": -30.67,
+                    "current_rate": 1.5568,
+                    "open_order": None,
+                }
+            ],
+        ]
+
+        open_trades = self.scraper.get_open_trades(tunnel=self.scraper.tunnels[0])
+        self.database.check_then_add_trades(data=open_trades, host_id=result)
+
+        db_open_trades = self.database.get_trades(host_id=result, is_open=True)
+
+        assert db_open_trades == [
+            (
+                1,
+                2,
+                "HOOK/USDT",
+                "HOOK",
+                "USDT",
+                "binance",
+                True,
+                157.4,
+                352.89312,
+                -108.30096307,
+                "force_entry",
+                0.2645004513024,
+                "BNB",
+                None,
+                None,
+                1670694305946,
+                2.242014739517154,
+                None,
+                None,
+                None,
+                0.0275,
+                1.0,
+                False,
+                "SPOT",
+                0.0,
+            )
+        ]
+
+        count_db_open_trades = self.database.get_trades_count(
+            host_id=result, quote_currency="USDT", is_open=True
+        )
+        assert count_db_open_trades == 1
+        all_hosts_no_index = self.database.get_all_hosts()
+        all_hosts_index = self.database.get_all_hosts(index=True)
+        assert all_hosts_no_index == {
+            "live": {
+                1: {
+                    "remote": "127.0.0.1:1",
+                    "local": "127.0.0.2:2",
+                    "exchange": "binance",
+                    "strategy": "PocketRocket",
+                    "status": "Running",
+                    "stake": "USDT",
+                    "trading_mode": "SPOT",
+                    "ft_version": "2022.12",
+                    "strategy_version": "v1.5",
+                    "starting_capital": 646.0491492400001,
+                    "last_checked": all_hosts_no_index["live"][1]["last_checked"],
+                    "alert": False,
+                }
+            },
+            "dry": {},
+            "recent": [],
+            "open": [],
+        }
+        assert all_hosts_index == {
+            "live": {
+                1: {
+                    "remote": "127.0.0.1:1",
+                    "local": "127.0.0.2:2",
+                    "exchange": "binance",
+                    "strategy": "PocketRocket",
+                    "status": "Running",
+                    "stake": "USDT",
+                    "trading_mode": "SPOT",
+                    "ft_version": "2022.12",
+                    "strategy_version": "v1.5",
+                    "starting_capital": 646.0491492400001,
+                    "last_checked": all_hosts_no_index["live"][1]["last_checked"],
+                    "alert": False,
+                    "closed_trades": 1,
+                    "winning_trades": 1,
+                    "losing_trades": 0,
+                    "closed_profit": 0.31,
+                    "open_trades": 1,
+                    "open_profit": -108.3,
+                    "profit_factor": float("inf"),
+                }
+            },
+            "dry": {},
+            "recent": [
+                [
+                    1,
+                    1,
+                    "SUSHI/USDT",
+                    "SUSHI",
+                    "USDT",
+                    "binance",
+                    False,
+                    0.1,
+                    0.1286,
+                    0.312823,
+                    "force_entry",
+                    0.00012859999999999998,
+                    "SUSHI",
+                    0.0264712,
+                    "USDT",
+                    "2022-12-06 12:30:06",
+                    1.286,
+                    "2022-12-06 13:43:17",
+                    1.304,
+                    "trailing_stop_loss",
+                    1.304,
+                    1.0,
+                    False,
+                    "SPOT",
+                    0.0,
+                ]
+            ],
+            "open": [
+                [
+                    1,
+                    2,
+                    "HOOK/USDT",
+                    "HOOK",
+                    "USDT",
+                    "binance",
+                    True,
+                    157.4,
+                    352.89312,
+                    -108.30096307,
+                    "force_entry",
+                    0.2645004513024,
+                    "BNB",
+                    None,
+                    None,
+                    "2022-12-10 17:45:05",
+                    2.242014739517154,
+                    None,
+                    None,
+                    None,
+                    0.0275,
+                    1.0,
+                    False,
+                    "SPOT",
+                    0.0,
+                    None,
+                    None,
+                    6,
+                    1,
+                ]
+            ],
+        }
+
 
 if __name__ == "__main__":
     unittest.main()
