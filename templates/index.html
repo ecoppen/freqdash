@@ -86,9 +86,30 @@
                 </div>
             </div>
             {% endif %}
+            <br>
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header">
+                            Asset allocation
+                        </div>
+                        <div class="card-body">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header">
+                            Profit/loss
+                        </div>
+                        <div class="card-body">
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             {% if data["instances"]["dry"]|length > 0 %}
-            {% if data["instances"]["dry"]|length > 0 %}
+            {% if data["instances"]["live"]|length > 0 %}
             <br>
             {% endif %}
             <div class="card">
