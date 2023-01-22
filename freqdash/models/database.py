@@ -335,7 +335,7 @@ class Database:
             ).first()
         return price
 
-    def get_prices(self, exchange: str, trading_mode: str, quote: str):
+    def get_prices(self, exchange: str, trading_mode: str, quote: str) -> dict:
         table_object = self.get_table_object(table_name="prices")
         with Session(self.engine) as session:
             all_prices = session.execute(
@@ -343,10 +343,10 @@ class Database:
                     exchange=exchange, trading_mode=trading_mode
                 )
             ).all()
-        prices = []
+        prices = {}
         for symbol in all_prices:
-            if symbol[3].endswith(quote):
-                prices.append(symbol)
+            if symbol[3].endswith(quote) or symbol[3].startswith(quote):
+                prices[symbol[3]] = symbol[4]
         return prices
 
     def delete_then_update_price(self, exchange: str, market: str, data: dict):
