@@ -31,7 +31,7 @@ class TestDatabaseAndScraper(unittest.TestCase):
         is None
     )
     assert (
-        database.get_prices(exchange="binance", quote="USDT", trading_mode="SPOT") == []
+        database.get_prices(exchange="binance", quote="USDT", trading_mode="SPOT") == {}
     )
     assert database.get_balances(host_id=1) == []
     assert database.get_trades(host_id=1) == []
