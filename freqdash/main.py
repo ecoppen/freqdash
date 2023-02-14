@@ -33,8 +33,8 @@ log.info("freqdash started")
 ssh_keys_folder = Path(Path().resolve(), "ssh_keys")
 config_file = Path(Path().resolve(), "config", "config.json")
 config = load_config(path=config_file)
-database_file = Path(Path().resolve(), f"{config.database_name}.db")
-database = Database(path=database_file)
+#database_file = Path(Path().resolve(), f"{config.database.name}.db")
+database = Database(config=config.database)
 tunnels = load_tunnels(
     config=config.remote_freqtrade_instances, ssh_keys_folder=ssh_keys_folder
 )
