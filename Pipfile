@@ -11,7 +11,7 @@ psycopg = {extras = ["binary"], version = "*"}
 pydantic = "*"
 requests = "*"
 sshtunnel = "*"
-sqlalchemy = "==2.0.0rc2"
+sqlalchemy = ">=2.0.0rc2"
 uvicorn = "*"
 
 [dev-packages]
