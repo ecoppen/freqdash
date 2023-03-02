@@ -198,6 +198,9 @@ class Database:
         if result is not None:
             for host in result:
                 difference = now - host[13]
+                today = datetime.now()
+                last_checked = datetime.utcfromtimestamp(host[13] / 1000.0)
+                delta = today - last_checked
                 hosts[host[8]][host[0]] = {
                     "remote": host[1],
                     "local": host[2],
@@ -209,9 +212,7 @@ class Database:
                     "ft_version": host[9],
                     "strategy_version": host[10],
                     "starting_capital": host[11],
-                    "last_checked": datetime.utcfromtimestamp(host[13] / 1000).strftime(
-                        "%Y-%m-%d %H:%M:%S"
-                    ),
+                    "last_checked": delta.seconds // 3600,
                     "alert": difference / 1000 > 600,
                 }
                 if index:
@@ -228,6 +229,37 @@ class Database:
                     hosts[host[8]][host[0]]["closed_profit"] = self.get_trade_profit(
                         host_id=host[0], is_open=False, quote_currency=host[6]
                     )
+                    if hosts[host[8]][host[0]]["starting_capital"] > 0:
+                        hosts[host[8]][host[0]]["total_profit_percentage"] = round(
+                            hosts[host[8]][host[0]]["closed_profit"]
+                            / hosts[host[8]][host[0]]["starting_capital"]
+                            * 100,
+                            2,
+                        )
+                    else:
+                        hosts[host[8]][host[0]]["total_profit_percentage"] = 0
+
+                    first_trade = self.get_trades(
+                        host_id=host[0], is_open=False, limit=1, sort=True, order="asc"
+                    )
+                    if len(first_trade) > 0:
+                        first_trade_date = datetime.utcfromtimestamp(
+                            first_trade[0][15] / 1000.0
+                        )
+                        delta = today - first_trade_date
+                        hosts[host[8]][host[0]]["days_from_first_trade"] = delta.days
+                    else:
+                        hosts[host[8]][host[0]]["days_from_first_trade"] = 0
+
+                    if hosts[host[8]][host[0]]["days_from_first_trade"] > 0:
+                        hosts[host[8]][host[0]]["daily_profit_percentage"] = round(
+                            hosts[host[8]][host[0]]["total_profit_percentage"]
+                            / hosts[host[8]][host[0]]["days_from_first_trade"],
+                            2,
+                        )
+                    else:
+                        hosts[host[8]][host[0]]["daily_profit_percentage"] = 0
+
                     hosts[host[8]][host[0]]["open_trades"] = self.get_trades_count(
                         host_id=host[0], is_open=True, quote_currency=host[6]
                     )
@@ -240,11 +272,15 @@ class Database:
                     )
 
                     closed_trades = self.get_trades(
-                        host_id=host[0], is_open=False, limit=10, sort=True
+                        host_id=host[0],
+                        is_open=False,
+                        limit=10,
+                        sort=True,
+                        order="desc",
                     )
                     hosts["recent"] += [list(trade) for trade in closed_trades]
                     open_trades = self.get_trades(
-                        host_id=host[0], is_open=True, sort=True
+                        host_id=host[0], is_open=True, sort=True, order="desc"
                     )
                     hosts["open"] += [list(trade) for trade in open_trades]
 
@@ -286,7 +322,6 @@ class Database:
                     else:
                         sell += 1
                 trade += [buy, sell]
-                log.info(trade)
 
         return hosts
 
@@ -387,15 +422,23 @@ class Database:
         is_open: bool = True,
         limit: int | None = None,
         sort: bool = False,
+        order: str = "",
     ):
         table_object = self.get_table_object(table_name="trades")
         with Session(self.engine) as session:
             if sort:
-                trades = session.execute(
-                    select(table_object)
-                    .filter_by(host_id=host_id, is_open=is_open)
-                    .order_by(table_object.c.close_timestamp.desc())
-                ).all()
+                if order == "asc":
+                    trades = session.execute(
+                        select(table_object)
+                        .filter_by(host_id=host_id, is_open=is_open)
+                        .order_by(table_object.c.close_timestamp.asc())
+                    ).all()
+                else:
+                    trades = session.execute(
+                        select(table_object)
+                        .filter_by(host_id=host_id, is_open=is_open)
+                        .order_by(table_object.c.close_timestamp.desc())
+                    ).all()
             else:
                 trades = session.execute(
                     select(table_object).filter_by(host_id=host_id, is_open=is_open)
@@ -425,6 +468,8 @@ class Database:
             count = session.scalar(
                 select(func.count()).select_from(table_object).filter(*filters)
             )
+        if count is None:
+            return 0
         return count
 
     def get_trade_profit(self, host_id: int, quote_currency: str, is_open: bool = True):

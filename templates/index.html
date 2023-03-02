@@ -3,7 +3,7 @@
 {% block title %}{% endblock %}
 
 {% block header %}
-<meta http-equiv="refresh" content="60">
+<meta http-equiv="refresh" content="600">
 {% endblock %}
 
 {% block page_content %}
@@ -37,13 +37,16 @@
                             <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Current bot status">Status</th>
                             <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Starting capital">SC</th>
                             <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Number of Closed Trades">CT</th>
-                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Profit Factor">PF</th>
                             <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Trades Won">W</th>
                             <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Trades Lost">L</th>
                             <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Closed Profit">CP</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Profit Factor">PF</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Days since first trade">D</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Profit %">P%</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Daily profit %">DP%</th>
                             <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Open Trades">OT</th>
                             <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Open profit">OP</th>
-                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Last updated by freqdash">Updated</th>
+                            <th scope="col" data-bs-html="true" data-bs-toggle="tooltip" data-bs-title="Last updated by freqdash (mins)">Updated</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -59,7 +62,6 @@
                             <td>{{value["status"]}}</td>
                             <td>{{"%.6g"|format(value["starting_capital"])}}</td>
                             <td>{{value["closed_trades"]}}</td>
-                            <td>{{value["profit_factor"]}}</td>
                             <td>{{value["winning_trades"]}}</td>
                             <td>{{value["losing_trades"]}}</td>
                             {% if value["closed_profit"] >= 0 %}
@@ -69,6 +71,10 @@
                                 {% endif %}
                                 {{value["closed_profit"]}}
                             </td>
+                            <td>{{value["profit_factor"]}}</td>
+                            <td>{{value["days_from_first_trade"]}}</td>
+                            <td>{{value["total_profit_percentage"]}}%</td>
+                            <td>{{value["daily_profit_percentage"]}}%</td>
                             <td>{{value["open_trades"]}}</td>
                             {% if value["open_profit"] >= 0 %}
                             <td class="table-success">
