@@ -285,7 +285,7 @@
 {% block scripts %}
   <script type="text/javascript">
     var dom = document.getElementById('container1');
-    var myChart = echarts.init(dom, null, {
+    var myChart = echarts.init(dom, 'dark', {
       renderer: 'canvas',
       useDirtyRect: false
     });
@@ -346,7 +346,7 @@
 
   <script type="text/javascript">
     var dom = document.getElementById('container2');
-    var myChart = echarts.init(dom, null, {
+    var myChart = echarts.init(dom, 'dark', {
       renderer: 'canvas',
       useDirtyRect: false
     });
