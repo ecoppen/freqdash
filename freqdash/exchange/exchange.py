@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 import time
 from decimal import Decimal
@@ -12,6 +14,7 @@ class Exchange:
         pass
 
     exchange: str | None = None
+    news_url: str | None = None
     spot_api_url: str | None = None
     spot_trade_url: str | None = None
     futures_api_url: str | None = None
@@ -69,3 +72,6 @@ class Exchange:
 
     def get_futures_trade_url(self):
         return self.futures_trade_url
+
+    def get_news(self) -> list:
+        return []

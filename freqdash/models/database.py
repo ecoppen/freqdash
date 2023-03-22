@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 from datetime import datetime, timezone
 from typing import Optional
@@ -165,6 +167,19 @@ class Database:
             ft_is_entry: Mapped[Optional[bool]]
             status: Mapped[str]
             average: Mapped[Optional[float]]
+
+        class News(self.Base):  # type: ignore
+            __tablename__ = "news"
+
+            id: Mapped[intpk] = mapped_column(init=False)
+            exchange: Mapped[str]
+            headline: Mapped[str]
+            category: Mapped[str]
+            hyperlink: Mapped[str]
+            news_time: Mapped[int] = mapped_column(BigInteger)
+            added: Mapped[int] = mapped_column(
+                BigInteger, default=self.timestamp(dt=datetime.now())
+            )
 
         self.Base.metadata.create_all(self.engine)  # type: ignore
         log.info("database tables loaded")
@@ -793,3 +808,61 @@ class Database:
                         update(table_object).where(*filters).values(adjusted_order)
                     )
                     session.commit()
+
+    def get_instance(self, instance_id: int) -> dict:
+        table_object = self.get_table_object(table_name="hosts")
+        instance_data: dict = {}
+        with Session(self.engine) as session:
+            account = session.execute(
+                select(table_object).filter_by(id=instance_id)
+            ).first()
+            if account:
+                instance_data = {
+                    "remote_host": account[1],
+                    "exchange": account[2],
+                    "strategy": account[3],
+                    "state": account[4],
+                    "stake_currency": account[5],
+                    "trading_mode": account[6],
+                    "run_mode": account[7],
+                    "ft_version": account[8],
+                    "strategy_version": account[9],
+                    "starting_capital": account[10],
+                    "added": account[11],
+                    "last_checked": account[12],
+                }
+        return instance_data
+
+    def delete_then_update_news(self, exchange: str, data: dict) -> None:
+        table_object = self.get_table_object(table_name="news")
+
+        with Session(self.engine) as session:
+            check = session.scalars(
+                select(table_object).filter_by(exchange=exchange).limit(1)
+            ).first()
+
+            if check is not None:
+                if check > 0:
+                    log.info(f"News data found for account {exchange} - deleting")
+                    filters = [table_object.c.exchange == exchange]
+                    session.execute(delete(table_object).where(*filters))
+            if len(data) > 0:
+                for item in data:
+                    item["exchange"] = exchange
+                session.execute(insert(table_object), data)
+            session.commit()
+        log.info(f"News data updated for {exchange}: {len(data)}")
+
+    def get_count_news_items(self, start: int, end: int) -> int:
+        table_object = self.get_table_object(table_name="news")
+        with Session(self.engine) as session:
+            filters = [
+                table_object.c.news_time >= start,
+                table_object.c.news_time < end,
+            ]
+            count = session.scalar(
+                select(func.count()).select_from(table_object).filter(*filters)
+            )
+        if count is not None:
+            return count
+        return 0

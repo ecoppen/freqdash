@@ -27,5 +27,8 @@
       "api_password": ""
     }
   ],
-  "scrape_interval": 600
+  "dashboard_name": "freqdash",
+  "log_level": "info",
+  "news_source": ["binance", "bybit", "okx"],
+  "scrape_interval": 600,
 }

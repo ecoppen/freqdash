@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 from enum import Enum
 
@@ -9,6 +11,8 @@ from pydantic import (
     root_validator,
     validator,
 )
+
+from freqdash.exchange.utils import Exchanges
 
 
 class Databases(Enum):
@@ -52,15 +56,25 @@ class RemoteFreqtradeAPI(BaseModel):
 
 
 class Config(BaseModel):
+    database: Database
     local_freqtrade_instances: list[LocalFreqtradeAPI] | None
     remote_freqtrade_instances: list[RemoteFreqtradeAPI] | None
+    dashboard_name: str = "freqdash"
+    log_level: str = "info"
+    news_source: list[Exchanges] = ["binance", "bybit", "okx"]  # type: ignore
     scrape_interval: int = 600
-    database: Database
 
     @validator("scrape_interval")
     def interval_amount(cls, v):
         if v < 60:
             raise ValueError("Scraping interval lower limit is 60 (1 minute)")
+        return v
+
+    @validator("news_source")
+    def duplicate_news_source(cls, v):
+        unique_sources = set(v)
+        if len(v) != len(unique_sources):
+            raise ValueError("Each news source must be uniquely named")
         return v
 
     @root_validator

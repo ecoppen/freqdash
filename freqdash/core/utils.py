@@ -1,4 +1,6 @@
+import json
 import logging
+import re
 from datetime import datetime, timedelta
 from urllib.parse import urlencode
 
@@ -46,6 +48,7 @@ def send_public_request(
     payload: dict | None = None,
     auth: tuple | None = None,
     access_token: str | None = None,
+    json: bool = True,
 ):
     empty_response = BlankResponse().content
     if url_path is not None:
@@ -56,7 +59,7 @@ def send_public_request(
     if query_string:
         url = url + "?" + query_string
 
-    log.info(f"Requesting {url}")
+    log.debug(f"Requesting {url}")
     headers = {"Authorization": f"Bearer {access_token}"}
 
     try:
@@ -64,6 +67,8 @@ def send_public_request(
             url=url, auth=auth, timeout=5, headers=headers
         )
         headers = response.headers
+        if not json:
+            return headers, response.text
         json_response = response.json()
         if "code" in json_response and "msg" in json_response:
             if len(json_response["msg"]) > 0:
@@ -108,3 +113,49 @@ def end_milliseconds_ago(days: int) -> int:
         datetime.now() - timedelta(days=days), datetime.max.time()
     )
     return int(start_datetime.timestamp() * 1000)
+
+
+def find_in_string(
+    string: str,
+    start_substring: str,
+    end_substring: str | None = None,
+    return_json: bool = False,
+):
+    text = ""
+    start_index = string.find(start_substring)
+    if start_index > -1:
+        if end_substring is None:
+            text = string[start_index + len(start_substring) :]
+        else:
+            end_index = string.find(end_substring, start_index + len(start_substring))
+            if end_index > -1:
+                text = string[start_index + len(start_substring) : end_index]
+        if len(text) > 0 and return_json:
+            try:
+                text = json.loads(text)
+            except ValueError as e:
+                log.warning(f"JSON decode error: {e}")
+    return text
+
+
+def find_all_occurrences_in_string(
+    string: str, start_substring: str, end_substring: str
+) -> list:
+    occurences = []
+    start_index = string.find(start_substring)
+    while start_index > -1:
+        end_index = string.find(end_substring, start_index + len(start_substring))
+        if end_index == -1:
+            break
+        text = string[start_index + len(start_substring) : end_index]
+        occurences.append(text)
+        start_index = string.find(start_substring, start_index + 1)
+    return occurences
+
+
+def remove_non_alphanumeric(string: str) -> str:
+    return re.sub("[^0-9a-zA-Z ]+", "", string)
+
+
+def dt_to_ts(date) -> int:
+    return int(date.timestamp() * 1000)
