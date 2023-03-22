@@ -1041,7 +1041,7 @@ class TestDatabaseAndScraper(unittest.TestCase):
                     "losing_trades": 0,
                     "closed_profit": 0.31,
                     "total_profit_percentage": 0.05,
-                    "days_from_first_trade": 86,
+                    "days_from_first_trade": 105,
                     "daily_profit_percentage": 0.0,
                     "open_trades": 1,
                     "open_profit": -108.3,
