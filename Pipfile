@@ -4,18 +4,20 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+anyio = "*"
 fastapi = "*"
 jinja2 = "*"
 psycopg = {extras = ["binary"], version = "*"}
 pydantic = "*"
 requests = "*"
 sshtunnel = "*"
-sqlalchemy = "==2.0.0rc2"
-uvicorn = {extras = ["standard"], version = "*"}
+sqlalchemy = ">=2.0.0rc2"
+uvicorn = "*"
 
 [dev-packages]
 bandit = "*"
 black = "*"
+cfgv = "*"
 codecov = "*"
 flake8 = "*"
 freezegun = "*"

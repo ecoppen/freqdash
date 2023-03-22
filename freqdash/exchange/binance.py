@@ -1,7 +1,7 @@
 import logging
 from decimal import Decimal
 
-from freqdash.core.utils import send_public_request
+from freqdash.core.utils import find_in_string, send_public_request
 from freqdash.exchange.exchange import Exchange
 from freqdash.exchange.utils import Intervals, Settle
 
@@ -14,6 +14,7 @@ class Binance(Exchange):
         log.info("Binance initialised")
 
     exchange = "binance"
+    news_url = "https://www.binance.com/en/support/announcement/"
     spot_api_url = "https://api.binance.com"
     spot_trade_url = "https://www.binance.com/en/trade/BASE_QUOTE"
     futures_api_url = "https://fapi.binance.com"
@@ -150,3 +151,47 @@ class Binance(Exchange):
                 for candle in raw_json
             ]
         return []
+
+    def get_news(self) -> list:
+        news_type = {
+            48: "New crypto",
+            49: "Latest news",
+            93: "Latest activities",
+            50: "New fiat",
+            161: "Delisting",
+            157: "Wallet",
+            51: "API",
+            128: "Airdrop",
+        }
+        header, raw_text = send_public_request(
+            url=self.news_url, url_path="c-51?navId=51", json=False
+        )
+        to_find_start = '<script id="__APP_DATA" type="application/json">'
+        to_find_end = "</script>"
+        news: list = []
+        text = find_in_string(
+            string=raw_text,
+            start_substring=to_find_start,
+            end_substring=to_find_end,
+            return_json=True,
+        )
+        if len(text) > 0:
+            if "routeProps" in text:
+                if "ce50" in text["routeProps"]:
+                    if "catalogs" in text["routeProps"]["ce50"]:
+                        for catalog in text["routeProps"]["ce50"]["catalogs"]:
+                            catalog_id = catalog["catalogId"]
+                            if "articles" in catalog:
+                                for article in catalog["articles"]:
+                                    headline = article["title"]
+                                    code = article["code"]
+                                    release = article["releaseDate"]
+                                    news.append(
+                                        {
+                                            "headline": headline,
+                                            "category": news_type[catalog_id],
+                                            "hyperlink": f"{self.news_url}{code}",
+                                            "news_time": release,
+                                        }
+                                    )
+        return news

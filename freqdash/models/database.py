@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 from datetime import datetime, timezone
 from typing import Optional
@@ -166,6 +168,19 @@ class Database:
             status: Mapped[str]
             average: Mapped[Optional[float]]
 
+        class News(self.Base):  # type: ignore
+            __tablename__ = "news"
+
+            id: Mapped[intpk] = mapped_column(init=False)
+            exchange: Mapped[str]
+            headline: Mapped[str]
+            category: Mapped[str]
+            hyperlink: Mapped[str]
+            news_time: Mapped[int] = mapped_column(BigInteger)
+            added: Mapped[int] = mapped_column(
+                BigInteger, default=self.timestamp(dt=datetime.now())
+            )
+
         self.Base.metadata.create_all(self.engine)  # type: ignore
         log.info("database tables loaded")
 
@@ -198,6 +213,9 @@ class Database:
         if result is not None:
             for host in result:
                 difference = now - host[13]
+                today = datetime.now()
+                last_checked = datetime.utcfromtimestamp(host[13] / 1000.0)
+                delta = today - last_checked
                 hosts[host[8]][host[0]] = {
                     "remote": host[1],
                     "local": host[2],
@@ -209,9 +227,7 @@ class Database:
                     "ft_version": host[9],
                     "strategy_version": host[10],
                     "starting_capital": host[11],
-                    "last_checked": datetime.utcfromtimestamp(host[13] / 1000).strftime(
-                        "%Y-%m-%d %H:%M:%S"
-                    ),
+                    "last_checked": delta.seconds // 3600,
                     "alert": difference / 1000 > 600,
                 }
                 if index:
@@ -228,6 +244,37 @@ class Database:
                     hosts[host[8]][host[0]]["closed_profit"] = self.get_trade_profit(
                         host_id=host[0], is_open=False, quote_currency=host[6]
                     )
+                    if hosts[host[8]][host[0]]["starting_capital"] > 0:
+                        hosts[host[8]][host[0]]["total_profit_percentage"] = round(
+                            hosts[host[8]][host[0]]["closed_profit"]
+                            / hosts[host[8]][host[0]]["starting_capital"]
+                            * 100,
+                            2,
+                        )
+                    else:
+                        hosts[host[8]][host[0]]["total_profit_percentage"] = 0
+
+                    first_trade = self.get_trades(
+                        host_id=host[0], is_open=False, limit=1, sort=True, order="asc"
+                    )
+                    if len(first_trade) > 0:
+                        first_trade_date = datetime.utcfromtimestamp(
+                            first_trade[0][15] / 1000.0
+                        )
+                        delta = today - first_trade_date
+                        hosts[host[8]][host[0]]["days_from_first_trade"] = delta.days
+                    else:
+                        hosts[host[8]][host[0]]["days_from_first_trade"] = 0
+
+                    if hosts[host[8]][host[0]]["days_from_first_trade"] > 0:
+                        hosts[host[8]][host[0]]["daily_profit_percentage"] = round(
+                            hosts[host[8]][host[0]]["total_profit_percentage"]
+                            / hosts[host[8]][host[0]]["days_from_first_trade"],
+                            2,
+                        )
+                    else:
+                        hosts[host[8]][host[0]]["daily_profit_percentage"] = 0
+
                     hosts[host[8]][host[0]]["open_trades"] = self.get_trades_count(
                         host_id=host[0], is_open=True, quote_currency=host[6]
                     )
@@ -240,11 +287,15 @@ class Database:
                     )
 
                     closed_trades = self.get_trades(
-                        host_id=host[0], is_open=False, limit=10, sort=True
+                        host_id=host[0],
+                        is_open=False,
+                        limit=10,
+                        sort=True,
+                        order="desc",
                     )
                     hosts["recent"] += [list(trade) for trade in closed_trades]
                     open_trades = self.get_trades(
-                        host_id=host[0], is_open=True, sort=True
+                        host_id=host[0], is_open=True, sort=True, order="desc"
                     )
                     hosts["open"] += [list(trade) for trade in open_trades]
 
@@ -286,7 +337,6 @@ class Database:
                     else:
                         sell += 1
                 trade += [buy, sell]
-                log.info(trade)
 
         return hosts
 
@@ -387,15 +437,23 @@ class Database:
         is_open: bool = True,
         limit: int | None = None,
         sort: bool = False,
+        order: str = "",
     ):
         table_object = self.get_table_object(table_name="trades")
         with Session(self.engine) as session:
             if sort:
-                trades = session.execute(
-                    select(table_object)
-                    .filter_by(host_id=host_id, is_open=is_open)
-                    .order_by(table_object.c.close_timestamp.desc())
-                ).all()
+                if order == "asc":
+                    trades = session.execute(
+                        select(table_object)
+                        .filter_by(host_id=host_id, is_open=is_open)
+                        .order_by(table_object.c.close_timestamp.asc())
+                    ).all()
+                else:
+                    trades = session.execute(
+                        select(table_object)
+                        .filter_by(host_id=host_id, is_open=is_open)
+                        .order_by(table_object.c.close_timestamp.desc())
+                    ).all()
             else:
                 trades = session.execute(
                     select(table_object).filter_by(host_id=host_id, is_open=is_open)
@@ -425,6 +483,8 @@ class Database:
             count = session.scalar(
                 select(func.count()).select_from(table_object).filter(*filters)
             )
+        if count is None:
+            return 0
         return count
 
     def get_trade_profit(self, host_id: int, quote_currency: str, is_open: bool = True):
@@ -748,3 +808,61 @@ class Database:
                         update(table_object).where(*filters).values(adjusted_order)
                     )
                     session.commit()
+
+    def get_instance(self, instance_id: int) -> dict:
+        table_object = self.get_table_object(table_name="hosts")
+        instance_data: dict = {}
+        with Session(self.engine) as session:
+            account = session.execute(
+                select(table_object).filter_by(id=instance_id)
+            ).first()
+            if account:
+                instance_data = {
+                    "remote_host": account[1],
+                    "exchange": account[2],
+                    "strategy": account[3],
+                    "state": account[4],
+                    "stake_currency": account[5],
+                    "trading_mode": account[6],
+                    "run_mode": account[7],
+                    "ft_version": account[8],
+                    "strategy_version": account[9],
+                    "starting_capital": account[10],
+                    "added": account[11],
+                    "last_checked": account[12],
+                }
+        return instance_data
+
+    def delete_then_update_news(self, exchange: str, data: dict) -> None:
+        table_object = self.get_table_object(table_name="news")
+
+        with Session(self.engine) as session:
+            check = session.scalars(
+                select(table_object).filter_by(exchange=exchange).limit(1)
+            ).first()
+
+            if check is not None:
+                if check > 0:
+                    log.info(f"News data found for account {exchange} - deleting")
+                    filters = [table_object.c.exchange == exchange]
+                    session.execute(delete(table_object).where(*filters))
+            if len(data) > 0:
+                for item in data:
+                    item["exchange"] = exchange
+                session.execute(insert(table_object), data)
+            session.commit()
+        log.info(f"News data updated for {exchange}: {len(data)}")
+
+    def get_count_news_items(self, start: int, end: int) -> int:
+        table_object = self.get_table_object(table_name="news")
+        with Session(self.engine) as session:
+            filters = [
+                table_object.c.news_time >= start,
+                table_object.c.news_time < end,
+            ]
+            count = session.scalar(
+                select(func.count()).select_from(table_object).filter(*filters)
+            )
+        if count is not None:
+            return count
+        return 0

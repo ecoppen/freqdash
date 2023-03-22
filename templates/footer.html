@@ -1,9 +1,19 @@
-<footer class="footer mt-auto py-3 col-md-9 ms-sm-auto col-lg-10 px-md-4 border-top bg-light">
-    <div class="col-md-4 d-flex align-items-center">
-        <a href="https://github.com/ecoppen/freqdash" target="_blank"
-           class="mb-3 me-2 mb-md-0 text-muted text-decoration-none lh-1">
-            <i class="fa-solid fa-rocket"></i>
-        </a>
-        <span class="mb-3 mb-md-0 text-muted">© 2023 freqdash</span>
-    </div>
-</footer>
+</div>
+</body>
+<div class="container">
+    <footer class="d-flex flex-wrap justify-content-between align-items-center py-3 my-4 border-top">
+        <p class="col-md-4 mb-0 text-muted text-light">&copy; {{ page_data['year'] }} freqdash&nbsp;&nbsp;<a style="text-decoration: none; color:#000" target="_blank" href="https://github.com/ecoppen"><i
+                class="fab fa-github text-light"></i></a></p>
+
+        <ul class="nav col-md-4 justify-content-end">
+            <li class="nav-item"><a href="{{url_for('index')}}" class="nav-link px-2 text-muted">Home</a></li>
+            <li class="nav-item"><a href="#" class="nav-link px-2 text-muted">News</a></li>
+            <li class="nav-item"><a href="/docs" class="nav-link px-2 text-muted">API</a></li>
+        </ul>
+    </footer>
+</div>
+<script>
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+    const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+</script>
+</html>

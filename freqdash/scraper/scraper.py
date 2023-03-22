@@ -1,6 +1,7 @@
 import logging
 
 import requests  # type: ignore
+import sshtunnel
 
 from freqdash.core.utils import send_public_request
 from freqdash.models.database import Database
@@ -18,55 +19,66 @@ class Scraper:
 
     def scrape_cycle(self) -> None:
         for tunnel in self.tunnels:
-            tunnel.start()
-            tunnel.jwt = self.get_jwt_token(tunnel=tunnel)
-            config = self.get_config(tunnel=tunnel)
-            if config:
-                log.info(f"Scraped {config['host']}")
-                config["trading_mode"] = config["trading_mode"].upper()
-                result = self.database.check_then_add_or_update_host(data=config)
-                sysinfo = self.get_sysinfo(tunnel=tunnel)
-                if sysinfo:
-                    data = {"host_id": result} | sysinfo
-                    self.database.add_sysinfo(data=data)
-                last_open_trade_id = self.database.get_oldest_open_trade_id(
-                    host_id=result
+            try:
+                tunnel.start()
+                tunnel.jwt = self.get_jwt_token(tunnel=tunnel)
+                config = self.get_config(tunnel=tunnel)
+                if config:
+                    log.info(f"Scraped {config['host']}")
+                    config["trading_mode"] = config["trading_mode"].upper()
+                    result = self.database.check_then_add_or_update_host(data=config)
+                    sysinfo = self.get_sysinfo(tunnel=tunnel)
+                    if sysinfo:
+                        data = {"host_id": result} | sysinfo
+                        self.database.add_sysinfo(data=data)
+                    last_open_trade_id = self.database.get_oldest_open_trade_id(
+                        host_id=result
+                    )
+                    last_open_trade_id //= 2
+                    log.info(f"last open trade id = {last_open_trade_id}")
+                    closed_trades = self.get_closed_trades(
+                        tunnel=tunnel, offset=last_open_trade_id
+                    )
+
+                    self.database.check_then_add_trades(
+                        data=closed_trades, host_id=result
+                    )
+                    open_trades = self.get_open_trades(tunnel=tunnel)
+                    self.database.check_then_add_trades(
+                        data=open_trades, host_id=result
+                    )
+
+                    health = self.get_health(tunnel=tunnel)
+                    self.database.add_last_process_ts(data=health, host_id=result)
+                    balance = self.get_balance(tunnel=tunnel)
+                    self.database.update_starting_capital(
+                        data=balance["starting_capital"], host_id=result
+                    )
+                    self.database.update_balances(
+                        data=balance["currencies"], host_id=result
+                    )
+
+                    logs = self.get_logs(tunnel=tunnel)
+                    self.database.update_logs(data=logs, host_id=result)
+                    locks = self.get_locks(tunnel=tunnel)
+                    log.info(locks)
+
+                    whitelist = self.get_whitelist(tunnel=tunnel)
+                    self.database.delete_then_add_baselist(
+                        data=whitelist, host_id=result
+                    )
+
+                    blacklist = self.get_blacklist(tunnel=tunnel)
+                    self.database.delete_then_add_baselist(
+                        data=blacklist, host_id=result, list_type="black"
+                    )
+
+                tunnel.jwt = None
+                tunnel.stop()
+            except sshtunnel.BaseSSHTunnelForwarderError as e:
+                log.error(
+                    f"SSH Tunnel for {tunnel.ssh_host}:{tunnel.ssh_port} unable to connect: {e}"
                 )
-                last_open_trade_id //= 2
-                log.info(f"last open trade id = {last_open_trade_id}")
-                closed_trades = self.get_closed_trades(
-                    tunnel=tunnel, offset=last_open_trade_id
-                )
-
-                self.database.check_then_add_trades(data=closed_trades, host_id=result)
-                open_trades = self.get_open_trades(tunnel=tunnel)
-                self.database.check_then_add_trades(data=open_trades, host_id=result)
-
-                health = self.get_health(tunnel=tunnel)
-                self.database.add_last_process_ts(data=health, host_id=result)
-                balance = self.get_balance(tunnel=tunnel)
-                self.database.update_starting_capital(
-                    data=balance["starting_capital"], host_id=result
-                )
-                self.database.update_balances(
-                    data=balance["currencies"], host_id=result
-                )
-
-                logs = self.get_logs(tunnel=tunnel)
-                self.database.update_logs(data=logs, host_id=result)
-                locks = self.get_locks(tunnel=tunnel)
-                log.info(locks)
-
-                whitelist = self.get_whitelist(tunnel=tunnel)
-                self.database.delete_then_add_baselist(data=whitelist, host_id=result)
-
-                blacklist = self.get_blacklist(tunnel=tunnel)
-                self.database.delete_then_add_baselist(
-                    data=blacklist, host_id=result, list_type="black"
-                )
-
-            tunnel.jwt = None
-            tunnel.stop()
 
     def get_jwt_token(self, tunnel) -> str:
         basepath = f"http://{tunnel.remote_host}:{tunnel.local_bind_port}/api/v1/"
