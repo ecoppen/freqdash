@@ -109,6 +109,18 @@ def instance(
     )
 
 
+@app.get("/news", response_class=HTMLResponse, include_in_schema=False)
+def news(
+    request: Request,
+    exchange: Exchanges | None = None,
+    timeframe: Intervals | None = None,
+):
+    page_data = {"dashboard_title": config.dashboard_name, "year": date.today().year}
+    return templates.TemplateResponse(
+        "news.html", {"request": request, "page_data": page_data}
+    )
+
+
 @app.get("/getprices")
 def get_prices(
     exchange: Exchanges,
