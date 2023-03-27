@@ -113,12 +113,22 @@ def instance(
 def news(
     request: Request,
     exchange: Exchanges | None = None,
-    timeframe: Intervals | None = None,
+    start: int | None = None,
+    end: int | None = None,
 ):
     page_data = {"dashboard_title": config.dashboard_name, "year": date.today().year}
+    news = get_news(exchange=exchange, start=start, end=end)
+
     return templates.TemplateResponse(
-        "news.html", {"request": request, "page_data": page_data}
+        "news.html", {"request": request, "page_data": page_data, "news": news}
     )
+
+
+@app.get("/getnews")
+def get_news(
+    exchange: Exchanges | None = None, start: int | None = None, end: int | None = None
+):
+    return database.get_news_items(start=start, end=end, exchange=exchange)
 
 
 @app.get("/getprices")

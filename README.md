@@ -25,17 +25,14 @@ freqdash also has the ability to connect directly to Exchange APIs for price dat
 - Charts: Profit/Loss, portfolio, kline with entries/exits charts available for each instance and exchange
 - Direct exchange data: Spot and futures pair prices and klines accessible directly from the exchange
 
-### Supported exchanges for direct data 
-- <a target="_blank" href="https://www.binance.com">Binance</a>
-- <a target="_blank" href="https://www.bybit.com">Bybit</a>
-- <a target="_blank" href="https://www.gate.io">Gate.io</a>
-- <a target="_blank" href="https://www.kucoin.com">Kucoin</a>
-- <a target="_blank" href="https://www.okx.com">Okx</a>
-
-### Supported exchanges for news 
-- <a target="_blank" href="https://www.binance.com">Binance</a>
-- <a target="_blank" href="https://www.bybit.com">Bybit</a>
-- <a target="_blank" href="https://www.okx.com">Okx</a> (Inefficient)
+### Exchange support
+| Exchange | Direct data | News |
+|:--------:|:-----------:|:----:|
+|  Binance |      ✅      |   ✅  |
+|   Bybit  |      ✅      |   ✅  |
+|  Gate.io |      ✅      |   ➖  |
+|  Kucoin  |      ✅      |   ➖  |
+|    Okx   |      ✅      |   ✅  |
 
 ## Quickstart
 
