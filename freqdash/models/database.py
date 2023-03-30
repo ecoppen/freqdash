@@ -187,6 +187,14 @@ class Database:
     def timestamp(self, dt) -> int:
         return int(dt.replace(tzinfo=timezone.utc).timestamp() * 1000)
 
+    def mins_since_timestamp(self, ts: int, utc: bool = False) -> int:
+        now = datetime.now()
+        if utc:
+            now = datetime.utcnow()
+        timestamp = datetime.utcfromtimestamp(ts / 1000.0)
+        delta = now - timestamp
+        return (delta.days * 24 * 60 * 60) + (delta.seconds // 60)
+
     def get_table_object(self, table_name: str):
         self.Base.metadata.reflect(bind=self.engine)  # type: ignore
         return self.Base.metadata.tables[table_name]  # type: ignore
@@ -214,8 +222,6 @@ class Database:
             for host in result:
                 difference = now - host[13]
                 today = datetime.now()
-                last_checked = datetime.utcfromtimestamp(host[13] / 1000.0)
-                delta = today - last_checked
                 hosts[host[8]][host[0]] = {
                     "remote": host[1],
                     "local": host[2],
@@ -227,7 +233,7 @@ class Database:
                     "ft_version": host[9],
                     "strategy_version": host[10],
                     "starting_capital": host[11],
-                    "last_checked": delta.seconds // 3600,
+                    "last_checked": self.mins_since_timestamp(ts=host[13], utc=True),
                     "alert": difference / 1000 > 600,
                 }
                 if index:
@@ -904,7 +910,7 @@ class Database:
                     "headline": news_item[2],
                     "category": news_item[3],
                     "hyperlink": news_item[4],
-                    "timestamp": news_item[5],
+                    "timestamp": self.mins_since_timestamp(ts=news_item[5], utc=True),
                 }
             )
         return all_news
