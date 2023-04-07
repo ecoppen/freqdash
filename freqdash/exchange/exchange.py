@@ -35,8 +35,8 @@ class Exchange:
     def get_spot_price(self, base: str, quote: str) -> Decimal:
         return Decimal(-1.0)
 
-    def get_spot_prices(self) -> list:
-        return []
+    def get_spot_prices(self) -> dict:
+        return {}
 
     def get_spot_kline(
         self,
@@ -52,8 +52,8 @@ class Exchange:
     def get_futures_price(self, base: str, quote: str) -> Decimal:
         return Decimal(-1.0)
 
-    def get_futures_prices(self) -> list:
-        return []
+    def get_futures_prices(self) -> dict:
+        return {}
 
     def get_futures_kline(
         self,

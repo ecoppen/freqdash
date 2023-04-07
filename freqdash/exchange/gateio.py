@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 
@@ -31,21 +33,17 @@ class Gateio(Exchange):
                 return Decimal(raw_json[0]["last"])
         return Decimal(-1.0)
 
-    def get_spot_prices(self) -> list[dict[str, Decimal]]:
+    def get_spot_prices(self) -> dict:
         self.check_weight()
         params: dict = {}
         header, raw_json = send_public_request(
             url=self.spot_api_url, url_path="/api/v4/spot/tickers", payload=params
         )
+        prices = {}
         if len(raw_json) > 0:
-            return [
-                {
-                    "symbol": pair["currency_pair"].replace("_", ""),
-                    "price": Decimal(pair["last"]),
-                }
-                for pair in raw_json
-            ]
-        return []
+            for pair in raw_json:
+                prices[pair["currency_pair"].replace("_", "")] = Decimal(pair["last"])
+        return prices
 
     def get_spot_kline(
         self,
@@ -107,7 +105,7 @@ class Gateio(Exchange):
     def get_futures_prices(
         self,
         settle: Settle = Settle.USDT,
-    ) -> list[dict[str, Decimal]]:
+    ) -> dict:
         self.check_weight()
         params: dict = {}
         header, raw_json = send_public_request(
@@ -115,13 +113,12 @@ class Gateio(Exchange):
             url_path=f"/api/v4/futures/{settle}/contracts",
             payload=params,
         )
+        prices = {}
         if len(raw_json) > 0:
-            return [
-                {"symbol": pair["name"], "price": Decimal(pair["last_price"])}
-                for pair in raw_json
-                if "name" in pair
-            ]
-        return []
+            for pair in raw_json:
+                if "name" in pair:
+                    prices[pair["name"]] = Decimal(pair["last_price"])
+        return prices
 
     def get_futures_kline(
         self,

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 
@@ -32,19 +34,19 @@ class Binance(Exchange):
             return Decimal(raw_json["price"])
         return Decimal(-1.0)
 
-    def get_spot_prices(self) -> list[dict[str, Decimal]]:
+    def get_spot_prices(self) -> dict:
         self.check_weight()
         params: dict = {}
         header, raw_json = send_public_request(
             url=self.spot_api_url, url_path="/api/v3/ticker/price", payload=params
         )
+
+        prices = {}
         self.update_weight(int(header["X-MBX-USED-WEIGHT-1M"]))
         if len(raw_json) > 0:
-            return [
-                {"symbol": pair["symbol"], "price": Decimal(pair["price"])}
-                for pair in raw_json
-            ]
-        return []
+            for pair in raw_json:
+                prices[pair["symbol"]] = Decimal(pair["price"])
+        return prices
 
     def get_spot_kline(
         self,
@@ -97,7 +99,7 @@ class Binance(Exchange):
             return Decimal(raw_json["price"])
         return Decimal(-1.0)
 
-    def get_futures_prices(self) -> list:
+    def get_futures_prices(self) -> dict:
         self.check_weight()
         params: dict = {}
         header, raw_json = send_public_request(
@@ -105,13 +107,12 @@ class Binance(Exchange):
             url_path="/fapi/v1/ticker/price",
             payload=params,
         )
+        prices = {}
         self.update_weight(int(header["X-MBX-USED-WEIGHT-1M"]))
         if len(raw_json) > 0:
-            return [
-                {"symbol": pair["symbol"], "price": Decimal(pair["price"])}
-                for pair in raw_json
-            ]
-        return []
+            for pair in raw_json:
+                prices[pair["symbol"]] = Decimal(pair["price"])
+        return prices
 
     def get_futures_kline(
         self,

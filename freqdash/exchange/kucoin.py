@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 
@@ -33,7 +35,7 @@ class Kucoin(Exchange):
                 return Decimal(raw_json["data"]["price"])
         return Decimal(-1.0)
 
-    def get_spot_prices(self) -> list:
+    def get_spot_prices(self) -> dict:
         self.check_weight()
         params: dict = {}
         header, raw_json = send_public_request(
@@ -41,16 +43,12 @@ class Kucoin(Exchange):
             url_path="/api/v1/market/allTickers",
             payload=params,
         )
+        prices = {}
         if "data" in [*raw_json]:
             if "ticker" in [*raw_json["data"]]:
-                return [
-                    {
-                        "symbol": pair["symbol"].replace("-", ""),
-                        "price": Decimal(pair["last"]),
-                    }
-                    for pair in raw_json["data"]["ticker"]
-                ]
-        return []
+                for pair in raw_json["data"]["ticker"]:
+                    prices[pair["symbol"].replace("-", "")] = Decimal(pair["last"])
+        return prices
 
     def get_spot_kline(
         self,
@@ -109,7 +107,7 @@ class Kucoin(Exchange):
                 return Decimal(raw_json["data"]["price"])
         return Decimal(-1.0)
 
-    def get_futures_prices(self) -> list:
+    def get_futures_prices(self) -> dict:
         self.check_weight()
         params: dict = {}
         header, raw_json = send_public_request(
@@ -117,16 +115,12 @@ class Kucoin(Exchange):
             url_path="/api/v1/contracts/active",
             payload=params,
         )
+        prices = {}
         if "data" in [*raw_json]:
             if len(raw_json["data"]) > 0:
-                return [
-                    {
-                        "symbol": pair["symbol"],
-                        "price": Decimal(pair["markPrice"]),
-                    }
-                    for pair in raw_json["data"]
-                ]
-        return []
+                for pair in raw_json["data"]:
+                    prices[pair["symbol"]] = Decimal(pair["markPrice"])
+        return prices
 
     def get_futures_kline(
         self,

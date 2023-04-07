@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 from decimal import Decimal
 
@@ -34,7 +36,7 @@ class Bybit(Exchange):
                 return Decimal(raw_json["result"]["price"])
         return Decimal(-1.0)
 
-    def get_spot_prices(self) -> list:
+    def get_spot_prices(self) -> dict:
         self.check_weight()
         params: dict = {}
         header, raw_json = send_public_request(
@@ -42,13 +44,13 @@ class Bybit(Exchange):
             url_path="/spot/v3/public/quote/ticker/price",
             payload=params,
         )
+
+        prices = {}
         if "result" in [*raw_json]:
             if "list" in [*raw_json["result"]]:
-                return [
-                    {"symbol": pair["symbol"], "price": Decimal(pair["price"])}
-                    for pair in raw_json["result"]["list"]
-                ]
-        return []
+                for pair in raw_json["result"]["list"]:
+                    prices[pair["symbol"]] = Decimal(pair["price"])
+        return prices
 
     def get_spot_kline(
         self,
@@ -101,20 +103,20 @@ class Bybit(Exchange):
                     return Decimal(raw_json["result"][0]["last_price"])
         return Decimal(-1.0)
 
-    def get_futures_prices(self) -> list:
+    def get_futures_prices(self) -> dict:
         self.check_weight()
-        params: dict = {}
+        params: dict = {"category": "linear"}
         header, raw_json = send_public_request(
             url=self.futures_api_url,
-            url_path="/v2/public/tickers",
+            url_path="/v5/market/tickers",
             payload=params,
         )
+        prices = {}
         if "result" in [*raw_json]:
-            return [
-                {"symbol": pair["symbol"], "price": Decimal(pair["last_price"])}
-                for pair in raw_json["result"]
-            ]
-        return []
+            if "list" in [*raw_json["result"]]:
+                for pair in raw_json["result"]["list"]:
+                    prices[pair["symbol"]] = Decimal(pair["lastPrice"])
+        return prices
 
     def get_futures_kline(
         self,

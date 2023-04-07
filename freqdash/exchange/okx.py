@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from decimal import Decimal
@@ -39,22 +41,18 @@ class Okx(Exchange):
                     return Decimal(raw_json["data"][0]["last"])
         return Decimal(-1.0)
 
-    def get_spot_prices(self) -> list:
+    def get_spot_prices(self) -> dict:
         self.check_weight()
         params = {"instType": "SPOT"}
         header, raw_json = send_public_request(
             url=self.spot_api_url, url_path="/api/v5/market/tickers", payload=params
         )
+        prices = {}
         if "data" in [*raw_json]:
             if len(raw_json["data"]) > 0:
-                return [
-                    {
-                        "symbol": pair["instId"].replace("-", ""),
-                        "price": Decimal(pair["last"]),
-                    }
-                    for pair in raw_json["data"]
-                ]
-        return []
+                for pair in raw_json["data"]:
+                    prices[pair["instId"].replace("-", "")] = Decimal(pair["last"])
+        return prices
 
     def get_spot_kline(
         self,
@@ -119,7 +117,7 @@ class Okx(Exchange):
                     return Decimal(raw_json["data"][0]["last"])
         return Decimal(-1.0)
 
-    def get_futures_prices(self) -> list:
+    def get_futures_prices(self) -> dict:
         self.check_weight()
         params = {"instType": "FUTURES"}
         header, raw_json = send_public_request(
@@ -127,16 +125,12 @@ class Okx(Exchange):
             url_path="/api/v5/market/tickers",
             payload=params,
         )
+        prices = {}
         if "data" in [*raw_json]:
             if len(raw_json["data"]) > 0:
-                return [
-                    {
-                        "symbol": pair["instId"].replace("-", ""),
-                        "price": Decimal(pair["last"]),
-                    }
-                    for pair in raw_json["data"]
-                ]
-        return []
+                for pair in raw_json["data"]:
+                    prices[pair["instId"].replace("-", "")] = Decimal(pair["last"])
+        return prices
 
     def get_instance_ids(self, base: str, quote: str) -> list:
         params = {"instType": "FUTURES"}
