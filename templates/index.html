@@ -192,15 +192,20 @@
                 {% if data["instances"]["recent"]|length > 0 %}
                     {% for trade in data["instances"]["recent"] %}
                         <li class="list-group-item">
-                            <span class="badge bg-primary">#{{ trade[0] }}</span>
-                            <span class="badge bg-secondary">{{ trade[2] }}</span>
-                            {% if trade[9] >= 0 %}
-                                <span class="badge bg-success">
-                            {% else %}
-                                <span class="badge bg-danger">
-                            {% endif %}
-                            {{ "%.3g"|format(trade[9]) }}
-                            </span>
+                            <div class="row">
+                                <div class="col-2"><span class="badge bg-primary">#{{ trade[0] }}</span></div>
+                                <div class="col-4"><span class="badge bg-secondary">{{ trade[2] }}</span></div>
+                                <div class="col-3">
+                                {% if trade[9] >= 0 %}
+                                    <span class="badge bg-success">
+                                {% else %}
+                                    <span class="badge bg-danger">
+                                {% endif %}
+                                {{ "%.3g"|format(trade[9]) }}
+                                </span>
+                                </div>
+
+                            </div>
                         </li>
                     {% endfor %}
                 {% else %}
