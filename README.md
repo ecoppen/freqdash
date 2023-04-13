@@ -18,6 +18,8 @@ freqdash is a free and open source python (3.11+) script to display a dashboard 
 It is built on the <a target="_blank" href="https://fastapi.tiangolo.com/">FastApi</a> framework and connects to local/remote Freqtrade instances via the <a target="_blank" href="https://www.paramiko.org/">paramiko</a> SSH library before consuming the local API, storing the data and displaying everything on one dashboard.
 freqdash also has the ability to connect directly to Exchange APIs for price data and kline information. 
 
+> Please note that freqdash is currently being developed alongside futuresboard v2 and is therefore a work in progress still
+
 ![image](https://user-images.githubusercontent.com/51025241/226862169-bc2d8767-d453-4e41-9bcc-77463a4e0329.png)
 
 ## Features
